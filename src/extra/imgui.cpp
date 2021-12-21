@@ -55,6 +55,7 @@ struct Style : public Base {
     FrameBorderSize,
     ItemSpacing,
     ItemInnerSpacing,
+    CellPadding,
     TouchExtraPadding,
     IndentSpacing,
     ColumnsMinSpacing,
@@ -186,6 +187,7 @@ struct Style : public Base {
     case FramePadding:
     case ItemSpacing:
     case ItemInnerSpacing:
+    case CellPadding:
     case TouchExtraPadding:
     case ButtonTextAlign:
     case SelectableTextAlign:
@@ -333,6 +335,9 @@ struct Style : public Base {
       break;
     case ItemInnerSpacing:
       style.ItemInnerSpacing = var2Vec2(input);
+      break;
+    case CellPadding:
+      style.CellPadding = var2Vec2(input);
       break;
     case TouchExtraPadding:
       style.TouchExtraPadding = var2Vec2(input);
