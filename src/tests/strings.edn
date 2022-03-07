@@ -1,4 +1,7 @@
 (defchain main-chain
+  "Hello " (String.Append "world!") (Log)
+  (Assert.Is "Hello world!" true)
+
   ["Hello" "world!" "How" "are" "we" "today?"]
   (String.Join :Separator " ") (Log)
   (Assert.Is "Hello world! How are we today?" true)

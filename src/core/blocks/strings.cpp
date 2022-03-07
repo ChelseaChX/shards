@@ -133,6 +133,49 @@ struct Replace : public Common {
   }
 };
 
+struct Append {
+  static CBTypesInfo inputTypes() { return CoreInfo::StringType; }
+  static CBTypesInfo outputTypes() { return CoreInfo::StringType; }
+
+  static CBParametersInfo parameters() { return CBParametersInfo(params); }
+
+  void setParam(int index, const CBVar &value) {
+    switch (index) {
+    case 0:
+      _str = value;
+      break;
+    default:
+      break;
+    }
+  }
+
+  CBVar getParam(int index) {
+    switch (index) {
+    case 0:
+      return _str;
+    default:
+      return Var::Empty;
+    }
+  }
+
+  void warmup(CBContext *context) { _str.warmup(context); }
+
+  void cleanup() { _str.cleanup(); }
+
+  CBVar activate(CBContext *context, const CBVar &input) {
+    auto appended = std::string(input.payload.stringValue).append(_str.get().payload.stringValue);
+
+    CBVar output{};
+    ::chainblocks::cloneVar(output, Var(appended));
+    return output;
+  }
+
+private:
+  static inline Parameters params{{"Value", CBCCSTR("The string to append."), {CoreInfo::StringOrStringVar}}};
+
+  ParamVar _str{};
+};
+
 struct Join {
   static CBTypesInfo inputTypes() { return CoreInfo::StringSeqType; }
   static CBTypesInfo outputTypes() { return CoreInfo::StringType; }
@@ -316,6 +359,7 @@ void registerBlocks() {
   REGISTER_CBLOCK("Regex.Replace", Replace);
   REGISTER_CBLOCK("Regex.Search", Search);
   REGISTER_CBLOCK("Regex.Match", Match);
+  REGISTER_CBLOCK("String.Append", Append);
   REGISTER_CBLOCK("String.Join", Join);
   REGISTER_CBLOCK("String.Sub", SubStr);
   REGISTER_CBLOCK("String.ToUpper", ToUpper);
