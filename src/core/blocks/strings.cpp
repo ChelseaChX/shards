@@ -182,6 +182,51 @@ private:
   std::string _separator;
 };
 
+struct SubStr {
+  static CBTypesInfo inputTypes() { return CoreInfo::StringType; }
+  static CBTypesInfo outputTypes() { return CoreInfo::StringType; }
+
+  static CBParametersInfo parameters() { return CBParametersInfo(params); }
+
+  void setParam(int index, const CBVar &value) {
+    switch (index) {
+    case 0:
+      _position = value.payload.intValue;
+      break;
+    case 1:
+      _count = value.payload.intValue;
+      break;
+    default:
+      break;
+    }
+  }
+
+  CBVar getParam(int index) {
+    switch (index) {
+    case 0:
+      return Var(_position);
+    case 1:
+      return Var(_count);
+    default:
+      return Var::Empty;
+    }
+  }
+
+  CBVar activate(CBContext *context, const CBVar &input) {
+    auto sv = CBSTRVIEW(input);
+    auto sub = sv.substr(_position, _count);
+
+    return Var(sub);
+  }
+
+private:
+  static inline Parameters params{{"Pos", CBCCSTR("The position in the string."), {CoreInfo::IntType}},
+                                  {"Count", CBCCSTR("The number of characters."), {CoreInfo::IntType}}};
+
+  CBInt _position;
+  CBInt _count;
+};
+
 struct ToUpper {
   static CBTypesInfo inputTypes() { return CoreInfo::StringType; }
   static CBTypesInfo outputTypes() { return CoreInfo::StringType; }
@@ -272,6 +317,7 @@ void registerBlocks() {
   REGISTER_CBLOCK("Regex.Search", Search);
   REGISTER_CBLOCK("Regex.Match", Match);
   REGISTER_CBLOCK("String.Join", Join);
+  REGISTER_CBLOCK("String.Sub", SubStr);
   REGISTER_CBLOCK("String.ToUpper", ToUpper);
   REGISTER_CBLOCK("String.ToLower", ToLower);
   REGISTER_CBLOCK("ParseInt", ParseInt);

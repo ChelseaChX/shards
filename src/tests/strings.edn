@@ -1,7 +1,13 @@
 (defchain main-chain
   ["Hello" "world!" "How" "are" "we" "today?"]
   (String.Join :Separator " ") (Log)
-  (Assert.Is "Hello world! How are we today?" true))
+  (Assert.Is "Hello world! How are we today?" true)
+
+  "ABCDEF"
+  (| (String.Sub) (Assert.Is "ABCDEF" true))
+  (| (String.Sub :Pos 1) (Assert.Is "BCDEF" true))
+  (| (String.Sub :Pos 2 :Count 3) (Assert.Is "CDE" true))
+  (| (String.Sub :Pos 4 :Count 1) (Assert.Is "E" true)))
 
 (defnode root)
 (schedule root main-chain)
