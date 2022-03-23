@@ -125,10 +125,8 @@ jobs:
           sharedKey: Linux-${{ matrix.build-type }}
       - name: Build
         run: |
-          mkdir build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} ..
-          ninja cbl
+          cmake -Bbuild -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build build --target cbl -v
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
