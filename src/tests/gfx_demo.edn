@@ -1,0 +1,11 @@
+(def timestep (/ 1.0 120.0))
+(def Root (Node))
+(defloop test-chain
+  (GFX.MainWindow
+   :Title "SDL Window" :Width 1280 :Height 720
+   :Contents (->
+              (ChainLoader (Chain* "gfx_demo_content.edn")
+              ))))
+
+(schedule Root test-chain)
+(run Root timestep)

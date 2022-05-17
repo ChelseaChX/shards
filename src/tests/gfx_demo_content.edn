@@ -1,0 +1,52 @@
+(def timestep (/ 1.0 120.0))
+(defn get-view-transform [time]
+  (->
+   time >= .time
+   (Float4 0 2.0 5.0 1.0) >= .arm-pos
+   .time (Math.AxisAngleY) (Math.Rotation) (Math.MatMul .arm-pos) (ToFloat3) >= .arm-pos-3
+   {:Position .arm-pos-3 :Target (Float3 0 0.75 0.0)} (Math.LookAt)))
+
+(Setup (->
+        ;; Setup view
+        (get-view-transform 0.0) >= .view-transform
+        (GFX.View :View .view-transform) >= .view
+
+        ;; Load model
+        (GFX.glTF "external/glTF-Sample-Models/2.0/Duck/glTF-Binary/Duck.glb") >= .duck
+
+        ;; Lights
+        (Float3 0 0 -1) (Math.Normalize) >= .light-direction
+
+        ;; Render pipeline
+        (GFX.BuiltinFeature BuiltinFeatureId.Transform) >> .features
+        (GFX.BuiltinFeature BuiltinFeatureId.BaseColor) >> .features
+        {:Shaders [{:Name "lighting"
+                    :Stage ProgrammableGraphicsStage.Fragment
+                    :EntryPoint (->
+                                 (Shader.ReadInput :Dimension 3 :Name "worldNormal") >= .normal
+                                 (Shader.ReadBuffer :Dimension 3 :Name "lightDirection") >= .light-dir
+
+                                 (Float3 0 0 0) (Math.Subtract .light-dir) >= .inv-light-dir
+                                 .normal (Math.Normalize) (Math.Dot .inv-light-dir) (Max 0.0) >= .n-dot-l
+                                 (Shader.ReadBuffer :Dimension 3 :Name "lightColor") (Math.Multiply .n-dot-l)
+                                 (Shader.WriteGlobal "lighting"))}
+                   {:Name "mainColor"
+                    :Stage ProgrammableGraphicsStage.Fragment
+                    :Dependencies [{:Name "textureColor"}]
+                    :EntryPoint (->
+                                 0.0 >= .time
+                                 .time (Math.Multiply 2.0) (Math.Cos) (Math.Divide 2.0) (Math.Add 0.5) >= .wave
+                                 (Shader.ReadGlobal :Dimension 3 :Name "lighting") (ToFloat4) >= .lighting-4
+                                 (Shader.ReadGlobal :Dimension 4 :Name "color") >= .base-color
+                                 .base-color (Math.Multiply .lighting-4)
+                                 (Shader.WriteOutput "color"))}]
+         :Params [{:Name "lightDirection" :Default .light-direction}
+                  {:Name "lightColor" :Default (Float3 1 1 1)}]} (GFX.Feature) >> .features
+        (GFX.DrawablePass :Features .features) >> .render-steps))
+
+.duck (GFX.Draw)
+
+;; Update view
+.time (Math.Add timestep) > .time
+(get-view-transform .time) > .view-transform
+(GFX.Render :Steps .render-steps :View .view)
