@@ -38,7 +38,8 @@
                                  .time (Math.Multiply 2.0) (Math.Cos) (Math.Divide 2.0) (Math.Add 0.5) >= .wave
                                  (Shader.ReadGlobal :Dimension 3 :Name "lighting") (ToFloat4) >= .lighting-4
                                  (Shader.ReadGlobal :Dimension 4 :Name "color") >= .base-color
-                                 .base-color (Math.Multiply .lighting-4)
+                                 .base-color (Math.Multiply .lighting-4) >= .a
+                                 .base-color (Math.Multiply (Float4 0.2 0.2 1.2 0.0)) (Math.Add .a)
                                  (Shader.WriteOutput "color"))}]
          :Params [{:Name "lightDirection" :Default .light-direction}
                   {:Name "lightColor" :Default (Float3 1 1 1)}]} (GFX.Feature) >> .features
