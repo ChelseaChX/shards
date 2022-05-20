@@ -1,12 +1,13 @@
 (def timestep (/ 1.0 120.0))
-(defn get-view-transform [time]
-  (->
-   time >= .time
-   (Float4 0 2.0 5.0 1.0) >= .arm-pos
-   .time (Math.AxisAngleY) (Math.Rotation) (Math.MatMul .arm-pos) (ToFloat3) >= .arm-pos-3
-   {:Position .arm-pos-3 :Target (Float3 0 0.75 0.0)} (Math.LookAt)))
+(defblocks get-view-transform [time]
+  time >= .tmp-time
+  (Float4 0 2.0 5.0 1.0) >= .arm-pos
+  .tmp-time (Math.AxisAngleY) (Math.Rotation) (Math.MatMul .arm-pos) (ToFloat3) >= .arm-pos-3
+  {:Position .arm-pos-3 :Target (Float3 0 0.75 0.0)} (Math.LookAt))
 
 (Setup (->
+        0.0 >= .time
+
         ;; Setup view
         (get-view-transform 0.0) >= .view-transform
         (GFX.View :View .view-transform) >= .view
@@ -39,7 +40,7 @@
                                  (Shader.ReadGlobal :Dimension 3 :Name "lighting") (ToFloat4) >= .lighting-4
                                  (Shader.ReadGlobal :Dimension 4 :Name "color") >= .base-color
                                  .base-color (Math.Multiply .lighting-4) >= .a
-                                 .base-color (Math.Multiply (Float4 0.2 0.2 1.2 0.0)) (Math.Add .a)
+                                 .base-color (Math.Multiply (Float4 0.2 0.2 0.2 0.0)) (Math.Add .a)
                                  (Shader.WriteOutput "color"))}]
          :Params [{:Name "lightDirection" :Default .light-direction}
                   {:Name "lightColor" :Default (Float3 1 1 1)}]} (GFX.Feature) >> .features
