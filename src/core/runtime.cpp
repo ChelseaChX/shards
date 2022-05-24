@@ -1511,7 +1511,7 @@ SHTypeInfo deriveTypeInfo(const SHVar &value, const SHInstanceData &data, bool *
       const auto varName = value.payload.stringValue;
       for (auto info : data.shared) {
         if (strcmp(info.name, varName) == 0) {
-          return info.exposedType;
+          return cloneTypeInfo(info.exposedType);
         }
       }
       // not found! reset containsVariables.
