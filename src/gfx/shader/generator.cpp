@@ -250,13 +250,13 @@ struct StructField {
   bool hasBuiltinTag() const { return !builtinTag.empty(); }
 };
 
-template <typename T> static void generateStruct(T &output, const String &typeName, const std::vector<StructField> &fields) {
+template <typename T> static void generateStruct(T &output, const String &typeName, const std::vector<StructField> &fields, bool interpolated = true) {
   output += fmt::format("struct {} {{\n", typeName);
   for (auto &field : fields) {
     std::string typeName = getFieldWGSLTypeName(field.base.type);
 
     String extraTags;
-    if (isIntegerType(field.base.type.baseType)) {
+    if (interpolated && isIntegerType(field.base.type.baseType)) {
       // integer vertex outputs requires flat interpolation
       extraTags = "@interpolate(flat)";
     }
@@ -427,7 +427,7 @@ struct Stage {
       for (auto &field : context.globals) {
         globalsStructFields.emplace_back(NamedField(field.first, field.second));
       }
-      generateStruct(globalsHeader, globalsStructName, globalsStructFields);
+      generateStruct(globalsHeader, globalsStructName, globalsStructFields, false);
       globalsHeader += fmt::format("var<private> {}: {};\n", globalsVariableName, globalsStructName);
     }
 
@@ -452,7 +452,7 @@ struct DynamicVertexInput : public IGeneratorDynamicHandler {
 
   bool createDynamicInput(const char *name, FieldType &out) {
     if (strcmp(name, "vertex_index") == 0) {
-      out = FieldType(ShaderFieldBaseType::Int32);
+      out = FieldType(ShaderFieldBaseType::UInt32);
       StructField newField = generateDynamicStructInput(name, out);
       inputStruct.push_back(newField);
       return true;
@@ -531,9 +531,6 @@ GeneratorOutput Generator::build(const std::vector<const EntryPoint *> &entryPoi
     fragmentOutputStructFields.emplace_back(outputFields[i], i);
   }
 
-  generateStruct(headerCode, vertexInputStructName, vertexInputStructFields);
-  generateStruct(headerCode, fragmentOutputStructName, fragmentOutputStructFields);
-
   stages[0].extraEntryPointParameters.push_back("@builtin(instance_index) _instanceIndex: u32");
   stages[0].mainFunctionHeader += fmt::format("{} = _instanceIndex;\n", instanceIndexer);
   stages[1].mainFunctionHeader += fmt::format("{} = {}.instanceIndex;\n", instanceIndexer, stages[1].inputVariableName);
@@ -611,9 +608,11 @@ GeneratorOutput Generator::build(const std::vector<const EntryPoint *> &entryPoi
     }
   }
 
-  // Generate interpolated structure here since it's based on vertex outputs
+  // Generate input/output structs here since they depend on shader code
+  generateStruct(headerCode, vertexInputStructName, vertexInputStructFields, false);
   generateStruct(headerCode, vertexOutputStructName, vertexOutputStructFields);
   generateStruct(headerCode, fragmentInputStructName, vertexOutputStructFields);
+  generateStruct(headerCode, fragmentOutputStructName, fragmentOutputStructFields, false);
 
   output.wgslSource = headerCode + stagesCode;
 
