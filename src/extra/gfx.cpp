@@ -321,6 +321,7 @@ extern void registerDrawableShards();
 extern void registerMaterialShards();
 extern void registerFeatureShards();
 extern void registerGLTFShards();
+extern void registerHighlightShards();
 namespace shader {
 extern void registerTranslatorShards();
 }
@@ -331,6 +332,7 @@ void registerShards() {
   registerMaterialShards();
   registerFeatureShards();
   registerGLTFShards();
+  registerHighlightShards();
   shader::registerTranslatorShards();
 
   REGISTER_SHARD("GFX.DrawablePass", DrawablePassShard);

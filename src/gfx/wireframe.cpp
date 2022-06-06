@@ -96,7 +96,9 @@ MeshPtr WireframeMeshGenerator::generate() {
 
 WireframeRenderer::WireframeRenderer(bool showBackfaces) { wireframeFeature = features::Wireframe::create(showBackfaces); }
 
-void WireframeRenderer::overlayWireframe(DrawQueue &queue, DrawablePtr drawable) {
+void WireframeRenderer::overlayWireframe(DrawQueuePtr queue, DrawablePtr drawable) {
+  assert(queue);
+
   Mesh *meshPtr = drawable->mesh.get();
   auto it = meshCache.find(meshPtr);
   if (it == meshCache.end()) {
@@ -115,6 +117,6 @@ void WireframeRenderer::overlayWireframe(DrawQueue &queue, DrawablePtr drawable)
   meshGenerator.mesh = drawable->mesh;
   clone->mesh = it->second.wireMesh;
   clone->features.push_back(wireframeFeature);
-  queue.add(clone);
+  queue->add(clone);
 }
 } // namespace gfx

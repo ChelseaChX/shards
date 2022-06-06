@@ -55,10 +55,11 @@ TEST_CASE("Renderer capture", "[General]") {
   DrawablePtr drawable = std::make_shared<Drawable>(mesh);
   ViewPtr view = std::make_shared<View>();
 
-  DrawQueue queue;
-  queue.add(drawable);
+  DrawQueuePtr queue = std::make_shared<DrawQueue>();
+  queue->add(drawable);
 
-  TEST_RENDER_LOOP(testRenderer) { renderer.render(queue, view, createTestPipelineSteps()); };
+  PipelineSteps steps = createTestPipelineSteps(queue);
+  TEST_RENDER_LOOP(testRenderer) { renderer.render(view, steps); };
   CHECK(testRenderer->checkFrame("capture", comparisonTolerance));
 
   testRenderer.reset();
@@ -81,17 +82,18 @@ TEST_CASE("Multiple vertex formats", "[General]") {
 
   ViewPtr view = createTestProjectionView();
 
-  DrawQueue queue;
+  DrawQueuePtr queue = std::make_shared<DrawQueue>();
 
   float offset = -2.0f;
   for (auto &mesh : meshes) {
     float4x4 transform = linalg::translation_matrix(float3(offset, 0.0f, 0.0f));
     DrawablePtr drawable = std::make_shared<Drawable>(mesh, transform);
-    queue.add(drawable);
+    queue->add(drawable);
     offset += 2.0f;
   }
 
-  TEST_RENDER_LOOP(testRenderer) { renderer.render(queue, view, createTestPipelineSteps()); };
+  PipelineSteps steps = createTestPipelineSteps(queue);
+  TEST_RENDER_LOOP(testRenderer) { renderer.render(view, steps); };
   CHECK(testRenderer->checkFrame("vertexFormats", comparisonTolerance));
 
   testRenderer.reset();
@@ -123,15 +125,15 @@ TEST_CASE("Pipeline states", "[General][!mayfail]") {
       .far = 4.0f,
   };
 
-  DrawQueue queue;
+  DrawQueuePtr queue = std::make_shared<DrawQueue>();
 
   float4x4 transform = linalg::translation_matrix(float3(-0.5f, 0.0f, -1.0f));
   DrawablePtr drawable = std::make_shared<Drawable>(redSphereMesh, transform);
-  queue.add(drawable);
+  queue->add(drawable);
 
   transform = linalg::translation_matrix(float3(0.5f, 0.0f, -3.0f));
   drawable = std::make_shared<Drawable>(greenSphereMesh, transform);
-  queue.add(drawable);
+  queue->add(drawable);
 
   auto testBlendState = [&](const char *name, const BlendState &state) {
     FeaturePtr blendFeature = std::make_shared<Feature>();
@@ -140,6 +142,7 @@ TEST_CASE("Pipeline states", "[General][!mayfail]") {
 
     PipelineSteps steps{
         makeDrawablePipelineStep(RenderDrawablesStep{
+            .drawQueue = queue,
             .features =
                 {
                     features::Transform::create(),
@@ -149,7 +152,7 @@ TEST_CASE("Pipeline states", "[General][!mayfail]") {
             .sortMode = SortMode::BackToFront,
         }),
     };
-    TEST_RENDER_LOOP(testRenderer) { renderer.render(queue, view, steps); };
+    TEST_RENDER_LOOP(testRenderer) { renderer.render(view, steps); };
     CHECK(testRenderer->checkFrame(name, comparisonTolerance));
   };
 
@@ -173,18 +176,18 @@ TEST_CASE("Shader parameters", "[General]") {
       FovDirection::Horizontal,
   };
 
-  DrawQueue queue;
+  DrawQueuePtr queue = std::make_shared<DrawQueue>();
   float4x4 transform;
   DrawablePtr drawable;
 
   transform = linalg::translation_matrix(float3(-2.0f, 0.0f, 0.0f));
   drawable = std::make_shared<Drawable>(sphereMesh, transform);
-  queue.add(drawable);
+  queue->add(drawable);
 
   transform = linalg::translation_matrix(float3(0.0f, 0.0f, 0.0f));
   drawable = std::make_shared<Drawable>(sphereMesh, transform);
   drawable->parameters.set("baseColor", float4(1, 0, 0, 1));
-  queue.add(drawable);
+  queue->add(drawable);
 
   auto material = std::make_shared<Material>();
   material->parameters.set("baseColor", float4(0, 1, 0, 1));
@@ -192,10 +195,11 @@ TEST_CASE("Shader parameters", "[General]") {
   transform = linalg::translation_matrix(float3(2.0f, 0.0f, 0.0f));
   drawable = std::make_shared<Drawable>(sphereMesh, transform);
   drawable->material = material;
-  queue.add(drawable);
+  queue->add(drawable);
 
   PipelineSteps steps{
       makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = queue,
           .features =
               {
                   features::Transform::create(),
@@ -204,7 +208,7 @@ TEST_CASE("Shader parameters", "[General]") {
       }),
   };
 
-  TEST_RENDER_LOOP(testRenderer) { renderer.render(queue, view, steps); };
+  TEST_RENDER_LOOP(testRenderer) { renderer.render(view, steps); };
   CHECK(testRenderer->checkFrame("shaderParameters", comparisonTolerance));
 
   testRenderer.reset();
@@ -230,11 +234,11 @@ TEST_CASE("Reference tracking", "[General]") {
 
     ViewPtr view = std::make_shared<View>();
 
-    DrawQueue queue;
-    queue.add(drawable);
+    DrawQueuePtr queue = std::make_shared<DrawQueue>();
+    queue->add(drawable);
     context.beginFrame();
     renderer.beginFrame();
-    renderer.render(queue, view, createTestPipelineSteps());
+    renderer.render(view, createTestPipelineSteps(queue));
     renderer.endFrame();
     context.endFrame();
   }
@@ -271,7 +275,7 @@ TEST_CASE("Textures", "[General]") {
       .far = 10.0f,
   };
 
-  DrawQueue queue;
+  DrawQueuePtr queue = std::make_shared<DrawQueue>();
   float4x4 transform;
   DrawablePtr drawable;
 
@@ -287,12 +291,12 @@ TEST_CASE("Textures", "[General]") {
   transform = linalg::translation_matrix(float3(-.5f, 0.0f, 0.0f));
   drawable = std::make_shared<Drawable>(planeMesh, transform);
   drawable->parameters.set("baseColor", textureA);
-  queue.add(drawable);
+  queue->add(drawable);
 
   transform = linalg::translation_matrix(float3(.5f, 0.0f, 0.0f));
   drawable = std::make_shared<Drawable>(planeMesh, transform);
   drawable->parameters.set("baseColor", textureB);
-  queue.add(drawable);
+  queue->add(drawable);
 
   FeaturePtr blendFeature = std::make_shared<Feature>();
   blendFeature->state.set_blend(BlendState{
@@ -302,6 +306,7 @@ TEST_CASE("Textures", "[General]") {
 
   PipelineSteps steps{
       makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = queue,
           .features =
               {
                   features::Transform::create(),
@@ -311,7 +316,7 @@ TEST_CASE("Textures", "[General]") {
       }),
   };
 
-  TEST_RENDER_LOOP(testRenderer) { renderer.render(queue, view, steps); };
+  TEST_RENDER_LOOP(testRenderer) { renderer.render(view, steps); };
   CHECK(testRenderer->checkFrame("textures", comparisonTolerance));
 
   testRenderer.reset();
@@ -330,8 +335,8 @@ TEST_CASE("Wireframe", "[General]") {
       FovDirection::Horizontal,
   };
 
-  DrawQueue queue;
-  DrawQueue editorQueue;
+  DrawQueuePtr queue = std::make_shared<DrawQueue>();
+  DrawQueuePtr editorQueue = std::make_shared<DrawQueue>();
   float4x4 transform;
   DrawablePtr drawable;
 
@@ -341,6 +346,15 @@ TEST_CASE("Wireframe", "[General]") {
 
   PipelineSteps steps{
       makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = queue,
+          .features =
+              {
+                  features::Transform::create(),
+                  features::BaseColor::create(),
+              },
+      }),
+      makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = editorQueue,
           .features =
               {
                   features::Transform::create(),
@@ -353,14 +367,13 @@ TEST_CASE("Wireframe", "[General]") {
   WireframeRenderer wr1(true);
 
   auto loop = [&](WireframeRenderer &wr) {
-    queue.clear();
-    editorQueue.clear();
+    queue->clear();
+    editorQueue->clear();
 
-    queue.add(drawable);
+    queue->add(drawable);
     wr.overlayWireframe(editorQueue, drawable);
 
-    renderer.render(queue, view, steps);
-    renderer.render(editorQueue, view, steps);
+    renderer.render(view, steps);
   };
 
   TEST_RENDER_LOOP(testRenderer) { loop(wr0); };

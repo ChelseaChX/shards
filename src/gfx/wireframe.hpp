@@ -24,7 +24,7 @@ private:
 
 public:
   WireframeRenderer(bool showBackfaces = false);
-  void overlayWireframe(DrawQueue &queue, DrawablePtr drawable);
+  void overlayWireframe(DrawQueuePtr queue, DrawablePtr drawable);
 };
 } // namespace gfx
 
