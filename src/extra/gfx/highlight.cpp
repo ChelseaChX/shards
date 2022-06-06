@@ -11,6 +11,8 @@ struct HighlightRendererContext {
 
   DrawQueuePtr queue;
   WireframeRenderer renderer;
+
+  HighlightRendererContext() : renderer(true) {}
 };
 
 struct HighlightBase {
