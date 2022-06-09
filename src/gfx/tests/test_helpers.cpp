@@ -20,7 +20,7 @@ TEST_CASE("Wireframe", "[Editor]") {
   auto testRenderer = createTestRenderer();
   Renderer &renderer = *testRenderer->renderer.get();
 
-  MeshPtr sphereMesh = createCubeMesh();
+  MeshPtr cubeMesh = createCubeMesh();
 
   ViewPtr view = std::make_shared<View>();
   view->view = linalg::lookat_matrix(float3(3, 3.0f, 3.0f), float3(0, 0, 0), float3(0, 1, 0));
@@ -35,19 +35,19 @@ TEST_CASE("Wireframe", "[Editor]") {
   DrawablePtr drawable;
 
   transform = linalg::translation_matrix(float3(0.0f, 0.0f, 0.0f));
-  drawable = std::make_shared<Drawable>(sphereMesh, transform);
+  drawable = std::make_shared<Drawable>(cubeMesh, transform);
   drawable->parameters.set("baseColor", float4(0.2f, 0.2f, 0.2f, 1.0f));
 
   PipelineSteps steps{
-      makeDrawablePipelineStep(RenderDrawablesStep{
-          .drawQueue = queue,
-          .features =
-              {
-                  features::Transform::create(),
-                  features::BaseColor::create(),
-              },
-      }),
-      makeDrawablePipelineStep(RenderDrawablesStep{
+    makeDrawablePipelineStep(RenderDrawablesStep{
+        .drawQueue = queue,
+        .features =
+            {
+                features::Transform::create(),
+                features::BaseColor::create(),
+            },
+    }),
+        makeDrawablePipelineStep(RenderDrawablesStep{
           .drawQueue = editorQueue,
           .features =
               {
@@ -88,9 +88,26 @@ TEST_CASE("Shapes", "[Editor]") {
       FovDirection::Horizontal,
   };
 
+  MeshPtr cubeMesh = createCubeMesh();
+  float4x4 transform;
+  DrawablePtr cubeDrawable;
+
+  transform = linalg::translation_matrix(float3(0.0f, 0.0f, 0.0f));
+  cubeDrawable = std::make_shared<Drawable>(cubeMesh, transform);
+  cubeDrawable->parameters.set("baseColor", float4(0.2f, 0.2f, 0.2f, 1.0f));
+
+  DrawQueuePtr baseQueue = std::make_shared<DrawQueue>();
   DrawQueuePtr editorQueue = std::make_shared<DrawQueue>();
 
   PipelineSteps steps{
+      makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = baseQueue,
+          .features =
+              {
+                  features::Transform::create(),
+                  features::BaseColor::create(),
+              },
+      }),
       makeDrawablePipelineStep(RenderDrawablesStep{
           .drawQueue = editorQueue,
           .features =
@@ -103,7 +120,11 @@ TEST_CASE("Shapes", "[Editor]") {
 
   ShapeRenderer sr;
   TEST_RENDER_LOOP(testRenderer) {
+    baseQueue->clear();
     editorQueue->clear();
+
+    // Cube to test depth buffer interaction
+    baseQueue->add(cubeDrawable);
 
     sr.begin();
     size_t numSteps = 8;
@@ -122,5 +143,6 @@ TEST_CASE("Shapes", "[Editor]") {
     sr.finish(editorQueue);
     renderer.render(view, steps);
   };
+
   CHECK(testRenderer->checkFrame("helper_lines", comparisonTolerance));
 }
