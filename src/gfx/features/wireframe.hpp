@@ -20,6 +20,7 @@ struct Wireframe {
     if (showBackfaces) {
       feature->state.set_depthWrite(false);
       feature->state.set_culling(false);
+      feature->state.set_depthCompare(WGPUCompareFunction_Always);
     } else {
       feature->state.set_depthCompare(WGPUCompareFunction_LessEqual);
     }
