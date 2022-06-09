@@ -58,16 +58,16 @@ struct ScreenSpaceSizeFeature {
     code->appendLine("var viewport = ", ReadBuffer("viewport", FieldTypes::Float4, "view"));
     code->appendLine("var cameraPosition = invView[3].xyz");
     code->appendLine("var nextWS = posWS+", ReadInput("direction"));
-    code->appendLine("var nextProj = proj* view * world * vec4<f32>(nextWS, 1.0); nextProj = nextProj / nextProj.w");
-    code->appendLine("var posProj = proj* view * world * vec4<f32>(posWS, 1.0); posProj = posProj / posProj.w");
-    code->appendLine("var directionSS = normalize(nextProj.xy - posProj.xy)");
+    code->appendLine("var nextProj = proj* view * world * vec4<f32>(nextWS, 1.0)");
+    code->appendLine("var nextNDC = nextProj.xyz / nextProj.w");
+    code->appendLine("var posProj = proj* view * world * vec4<f32>(posWS, 1.0)");
+    code->appendLine("var posNDC = posProj.xyz / posProj.w");
+    code->appendLine("var directionSS = normalize(nextNDC.xy - posNDC.xy)");
     code->appendLine("var tangentSS = vec2<f32>(-directionSS.y, directionSS.x)");
-    code->appendLine("var posSS = posProj.xy * viewport.zw");
-    code->appendLine("posProj.x = posProj.x + tangentSS.x * width * lineY * (1.0/viewport.z)");
-    code->appendLine("posProj.y = posProj.y + tangentSS.y * width * lineY * (1.0/viewport.w)");
+    code->appendLine("var posSS = posNDC.xy * viewport.zw");
+    code->appendLine("posProj.x = (posNDC.x + tangentSS.x * width * lineY * (1.0/viewport.z)) * posProj.w");
+    code->appendLine("posProj.y = (posNDC.y + tangentSS.y * width * lineY * (1.0/viewport.w)) * posProj.w");
     code->append(WriteOutput("position", FieldTypes::Float4, "posProj"));
-    code->append(WriteOutput("positionSS", FieldTypes::Float2, "posSS"));
-    code->append(WriteOutput("directionSS", FieldTypes::Float2, "directionSS"));
     entry.code = std::move(code);
 
     return result;

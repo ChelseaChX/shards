@@ -111,7 +111,7 @@ struct App {
     view->view = linalg::lookat_matrix(p1, float3(0, 0, 0), float3(0, 1, 0));
 
     sr.begin();
-    size_t numSteps = 8;
+    size_t numSteps = 16;
     float spacing = 1.0f / 8.0f;
     for (size_t i = 0; i < numSteps; i++) {
       float sz = (float(i)) * spacing;
@@ -135,7 +135,7 @@ struct App {
       sr.addLine(triangleVerts[2], triangleVerts[0], color, thickness);
     };
 
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < 9; i++) {
       float3 offset = float3(0, 0, 0.2f) * (1 + i);
       doTriangle(float3(0.5, 0.5, 0.0) + offset, float3(1, 0, 0), float3(0, 1, 0), float4(1, 1, 1, 1), 1 + i);
     }
