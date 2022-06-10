@@ -104,40 +104,50 @@ struct App {
 
     // queue->add(duck);
 
-    const float3 p = float3(3, 3, 3);
+    const float3 p = float3(0, 3, 3);
 
-    float4 q = linalg::rotation_quat(float3(0, 1, 0), time);
+    float4 q = linalg::rotation_quat(float3(0, 1, 0), time*0.1f);
     float3 p1 = linalg::qrot(q, p);
     view->view = linalg::lookat_matrix(p1, float3(0, 0, 0), float3(0, 1, 0));
 
     sr.begin();
-    size_t numSteps = 16;
-    float spacing = 1.0f / 8.0f;
-    for (size_t i = 0; i < numSteps; i++) {
-      float sz = (float(i)) * spacing;
-      sr.addLine(float3(0, 0, sz), float3(1, 0, sz), float4(1, 0, 0, 1), 1 + i);
-      sr.addLine(float3(0, 0, sz), float3(1, 0, sz), float4(1, 0, 0, 1), 1 + i);
 
-      sr.addLine(float3(sz, 0, 0), float3(sz, 1, 0), float4(0, 1, 0, 1), 1 + i);
-      sr.addLine(float3(sz, 0, 0), float3(sz, 1, 0), float4(0, 1, 0, 1), 1 + i);
+    // size_t numSteps = 16;
+    // float spacing = 1.0f / 8.0f;
+    // for (size_t i = 0; i < numSteps; i++) {
+    //   float sz = (float(i)) * spacing;
+    //   sr.addLine(float3(0, 0, sz), float3(1, 0, sz), float4(1, 0, 0, 1), 1 + i);
+    //   sr.addLine(float3(0, 0, sz), float3(1, 0, sz), float4(1, 0, 0, 1), 1 + i);
 
-      sr.addLine(float3(0, sz, 0), float3(0, sz, 1), float4(0, 0, 1, 1), 1 + i);
-      sr.addLine(float3(0, sz, 0), float3(0, sz, 1), float4(0, 0, 1, 1), 1 + i);
-    }
+    //   sr.addLine(float3(sz, 0, 0), float3(sz, 1, 0), float4(0, 1, 0, 1), 1 + i);
+    //   sr.addLine(float3(sz, 0, 0), float3(sz, 1, 0), float4(0, 1, 0, 1), 1 + i);
 
-    auto doTriangle = [&](float3 center, float3 x, float3 y, float4 color, uint32_t thickness) {
-      float3 triangleVerts[3] = {};
-      triangleVerts[0] = center - 0.25f * x;
-      triangleVerts[1] = center + 0.25f * x;
-      triangleVerts[2] = center + 0.25f * y;
-      sr.addLine(triangleVerts[0], triangleVerts[1], color, thickness);
-      sr.addLine(triangleVerts[1], triangleVerts[2], color, thickness);
-      sr.addLine(triangleVerts[2], triangleVerts[0], color, thickness);
-    };
+    //   sr.addLine(float3(0, sz, 0), float3(0, sz, 1), float4(0, 0, 1, 1), 1 + i);
+    //   sr.addLine(float3(0, sz, 0), float3(0, sz, 1), float4(0, 0, 1, 1), 1 + i);
+    // }
 
-    for (size_t i = 0; i < 9; i++) {
-      float3 offset = float3(0, 0, 0.2f) * (1 + i);
-      doTriangle(float3(0.5, 0.5, 0.0) + offset, float3(1, 0, 0), float3(0, 1, 0), float4(1, 1, 1, 1), 1 + i);
+    // auto doTriangle = [&](float3 center, float3 x, float3 y, float4 color, uint32_t thickness) {
+    //   float3 triangleVerts[3] = {};
+    //   triangleVerts[0] = center - 0.25f * x;
+    //   triangleVerts[1] = center + 0.25f * x;
+    //   triangleVerts[2] = center + 0.25f * y;
+    //   sr.addLine(triangleVerts[0], triangleVerts[1], color, thickness);
+    //   sr.addLine(triangleVerts[1], triangleVerts[2], color, thickness);
+    //   sr.addLine(triangleVerts[2], triangleVerts[0], color, thickness);
+    // };
+
+    // for (size_t i = 0; i < 9; i++) {
+    //   float3 offset = float3(0, 0, 0.2f) * (1 + i);
+    //   doTriangle(float3(0.5, 0.5, 0.0) + offset, float3(1, 0, 0), float3(0, 1, 0), float4(1, 1, 1, 1), 1 + i);
+    // }
+
+    for (size_t i = 1; i < 5; i++) {
+      float r = 0.2f + (0.2f * i);
+      float2 size = float2(r * 0.9f, r * 1.1f);
+      uint32_t thickness = (1 + i);
+      sr.addRect(float3(0, 0, 0), float3(1, 0, 0), float3(0, 0, 1), size, float4(0, 1, 0, 1), thickness);
+      sr.addRect(float3(0, 0, 0), float3(0, 0, 1), float3(0, 1, 0), size, float4(1, 0, 0, 1), thickness);
+      sr.addRect(float3(0, 0, 0), float3(1, 0, 0), float3(0, 1, 0), size, float4(0, 0, 1, 1), thickness);
     }
 
     sr.finish(editorQueue);
