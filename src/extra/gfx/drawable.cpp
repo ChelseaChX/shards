@@ -282,7 +282,7 @@ struct DrawShard : public BaseConsumer {
     return SHVar{};
   }
 
-  SHVar activate(SHContext *shContext, const SHVar &input) { throw ActivationError("GFX.Draw: Unsupported input type"); }
+  SHVar activate(SHContext *shContext, const SHVar &input) { throw ActivationError("Unsupported input type"); }
 };
 
 struct DrawQueueShard {
