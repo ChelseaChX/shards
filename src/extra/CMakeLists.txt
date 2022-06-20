@@ -6,10 +6,12 @@ set(extra_SOURCES
   gfx/drawable.cpp
   gfx/material.cpp
   gfx/feature.cpp
-  gfx/helpers.cpp
   gfx/shader/translator.cpp
   gfx/shader/wgsl.cpp
   gfx/gltf.cpp
+  helpers/helpers.cpp
+  helpers/gizmos.cpp
+  helpers/highlight.cpp
   imgui.cpp
   # xr.cpp
   # gizmo.cpp
