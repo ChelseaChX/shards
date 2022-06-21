@@ -18,6 +18,7 @@ struct RenderDrawablesStep {
   DrawQueuePtr drawQueue;
   std::vector<FeaturePtr> features;
   SortMode sortMode = SortMode::Batch;
+  bool forceDepthClear = false;
 };
 
 typedef std::variant<RenderDrawablesStep> PipelineStep;
