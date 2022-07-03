@@ -2,6 +2,7 @@
 #include "drawable.hpp"
 #include "linalg.hpp"
 #include "mesh.hpp"
+#include "transform_updater.hpp"
 #include "wireframe.hpp"
 #include <stdexcept>
 
@@ -116,5 +117,11 @@ void WireframeRenderer::overlayWireframe(DrawQueue &queue, DrawablePtr drawable)
   clone->mesh = it->second.wireMesh;
   clone->features.push_back(wireframeFeature);
   queue.add(clone);
+}
+
+void WireframeRenderer::overlayWireframe(DrawQueue &queue, DrawableHierarchyPtr drawableHierarchy) {
+  TransformUpdaterCollector collector;
+  collector.collector = [&](DrawablePtr drawable) { overlayWireframe(queue, drawable); };
+  collector.update(drawableHierarchy);
 }
 } // namespace gfx
