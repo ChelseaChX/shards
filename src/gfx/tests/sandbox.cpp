@@ -102,7 +102,7 @@ struct App {
   void renderFrame(float time, float deltaTime) {
     renderer->beginFrame();
 
-    queue->add(duck);
+    // queue->add(duck);
 
     const float3 p = float3(3, 3, 3);
 

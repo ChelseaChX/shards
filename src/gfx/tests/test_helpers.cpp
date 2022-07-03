@@ -39,15 +39,15 @@ TEST_CASE("Wireframe", "[Editor]") {
   drawable->parameters.set("baseColor", float4(0.2f, 0.2f, 0.2f, 1.0f));
 
   PipelineSteps steps{
-    makeDrawablePipelineStep(RenderDrawablesStep{
-        .drawQueue = queue,
-        .features =
-            {
-                features::Transform::create(),
-                features::BaseColor::create(),
-            },
-    }),
-        makeDrawablePipelineStep(RenderDrawablesStep{
+      makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = queue,
+          .features =
+              {
+                  features::Transform::create(),
+                  features::BaseColor::create(),
+              },
+      }),
+      makeDrawablePipelineStep(RenderDrawablesStep{
           .drawQueue = editorQueue,
           .features =
               {
@@ -77,7 +77,7 @@ TEST_CASE("Wireframe", "[Editor]") {
   CHECK(testRenderer->checkFrame("wireframe-backfaces", comparisonTolerance));
 }
 
-TEST_CASE("Shapes", "[Editor]") {
+TEST_CASE("Lines", "[Editor]") {
   auto testRenderer = createTestRenderer();
   Renderer &renderer = *testRenderer->renderer.get();
 
@@ -130,7 +130,7 @@ TEST_CASE("Shapes", "[Editor]") {
     size_t numSteps = 8;
     float spacing = 1.0f / 8.0f;
     for (size_t i = 0; i < numSteps; i++) {
-      float sz = (float(i) /* - float(numSteps) / 2.0f - 0.5f */) * spacing;
+      float sz = (float(i)) * spacing;
       sr.addLine(float3(0, 0, sz), float3(1, 0, sz), float4(1, 0, 0, 1), 1 + i);
       sr.addLine(float3(0, 0, sz), float3(1, 0, sz), float4(1, 0, 0, 1), 1 + i);
 
@@ -145,4 +145,48 @@ TEST_CASE("Shapes", "[Editor]") {
   };
 
   CHECK(testRenderer->checkFrame("helper_lines", comparisonTolerance));
+}
+
+TEST_CASE("Circles", "[Editor]") {
+  auto testRenderer = createTestRenderer();
+  Renderer &renderer = *testRenderer->renderer.get();
+
+  ViewPtr view = std::make_shared<View>();
+  view->view = linalg::lookat_matrix(float3(3.0f, 3.0f, 3.0f), float3(0, 0, 0), float3(0, 1, 0));
+  view->proj = ViewPerspectiveProjection{
+      degToRad(45.0f),
+      FovDirection::Horizontal,
+  };
+
+  DrawQueuePtr editorQueue = std::make_shared<DrawQueue>();
+
+  PipelineSteps steps{
+      makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = editorQueue,
+          .features =
+              {
+                  ScreenSpaceSizeFeature::create(),
+                  features::BaseColor::create(),
+              },
+      }),
+  };
+
+  ShapeRenderer sr;
+  TEST_RENDER_LOOP(testRenderer) {
+    editorQueue->clear();
+
+    sr.begin();
+    for (size_t i = 0; i < 8; i++) {
+      float r = 0.2f + (0.2f * i);
+      uint32_t thickness = (1 + i);
+      uint32_t res = 8+(16*i);
+      sr.addCircle(float3(0, 0, 0), float3(1, 0, 0), float3(0, 0, 1), r - 0.0f, float4(0, 1, 0, 1), thickness, res);
+      sr.addCircle(float3(0, 0, 0), float3(0, 0, 1), float3(0, 1, 0), r - 0.05f, float4(1, 0, 0, 1), thickness, res);
+      sr.addCircle(float3(0, 0, 0), float3(1, 0, 0), float3(0, 1, 0), r - 0.1f, float4(0, 0, 1, 1), thickness, res);
+    }
+    sr.finish(editorQueue);
+    renderer.render(view, steps);
+  };
+
+  CHECK(testRenderer->checkFrame("helper_shapes", comparisonTolerance));
 }
