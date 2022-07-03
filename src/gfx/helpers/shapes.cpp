@@ -8,8 +8,7 @@ const std::vector<MeshVertexAttribute> &ShapeVertex::getAttributes() {
     attribs.emplace_back("position", 3, VertexAttributeType::Float32);
     attribs.emplace_back("color", 4, VertexAttributeType::Float32);
     attribs.emplace_back("direction", 3, VertexAttributeType::Float32);
-    attribs.emplace_back("fdata", 1, VertexAttributeType::Float32);
-    attribs.emplace_back("udata", 1, VertexAttributeType::UInt32);
+    attribs.emplace_back("offsetSS", 2, VertexAttributeType::Float32);
     return attribs;
   }();
   return attribs;
@@ -33,8 +32,7 @@ FeaturePtr ScreenSpaceSizeFeature::create() {
   using namespace gfx::shader::blocks;
   using namespace gfx::shader;
   std::unique_ptr<Compound> code = makeCompoundBlock();
-  code->appendLine("var width = f32(", ReadInput("udata"), ")");
-  code->appendLine("var lineY =", ReadInput("fdata"));
+  code->appendLine("var offsetSS =", ReadInput("offsetSS"));
   code->appendLine("var dir = ", ReadInput("direction"));
   code->appendLine("var color = ", ReadInput("color"));
   code->appendLine("var posWS = ", ReadInput("position"));
@@ -51,8 +49,10 @@ FeaturePtr ScreenSpaceSizeFeature::create() {
   code->appendLine("var posNDC = posProj.xyz / posProj.w");
   code->appendLine("var directionSS = normalize(nextNDC.xy - posNDC.xy)"); // Direction of the line in screen space
   code->appendLine("var tangentSS = vec2<f32>(-directionSS.y, directionSS.x)");
-  code->appendLine("posProj.x = (posNDC.x + tangentSS.x * width * 1.0 * lineY * (1.0/viewport.z)) * posProj.w");
-  code->appendLine("posProj.y = (posNDC.y + tangentSS.y * width * 1.0 * lineY * (1.0/viewport.w)) * posProj.w");
+  code->appendLine("posProj.x = (posNDC.x + tangentSS.x * offsetSS.y * (1.0/viewport.z) + directionSS.x * offsetSS.x * "
+                   "(1.0/viewport.z)) * posProj.w");
+  code->appendLine("posProj.y = (posNDC.y + tangentSS.y * offsetSS.y * (1.0/viewport.w) + directionSS.y * offsetSS.x *"
+                   "(1.0/viewport.w)) * posProj.w");
   code->append(WriteOutput("position", FieldTypes::Float4, "posProj"));
   entry.code = std::move(code);
 
@@ -65,48 +65,44 @@ FeaturePtr ScreenSpaceSizeFeature::create() {
   { _x.x, _x.y, _x.z, _x.w }
 
 void ShapeRenderer::addLine(float3 a, float3 b, float3 dirA, float3 dirB, float4 color, uint32_t thickness) {
+  float xOffset = 0.5f * thickness;
+  float yOffset = 1.0f * thickness;
   vertices.push_back(ShapeVertex{
       .position = UNPACK3(a),
       .color = UNPACK4(color),
       .direction = UNPACK3(dirA),
-      .fdata = {1.0f},
-      .udata = {thickness},
+      .offsetSS = {-xOffset, yOffset},
   });
   vertices.push_back(ShapeVertex{
       .position = UNPACK3(b),
       .color = UNPACK4(color),
       .direction = UNPACK3(dirB),
-      .fdata = {1.0f},
-      .udata = {thickness},
+      .offsetSS = {xOffset, yOffset},
   });
   vertices.push_back(ShapeVertex{
       .position = UNPACK3(b),
       .color = UNPACK4(color),
       .direction = UNPACK3(dirB),
-      .fdata = {-1.0f},
-      .udata = {thickness},
+      .offsetSS = {xOffset, -yOffset},
   });
 
   vertices.push_back(ShapeVertex{
       .position = UNPACK3(a),
       .color = UNPACK4(color),
       .direction = UNPACK3(dirA),
-      .fdata = {-1.0f},
-      .udata = {thickness},
+      .offsetSS = {-xOffset, -yOffset},
   });
   vertices.push_back(ShapeVertex{
       .position = UNPACK3(a),
       .color = UNPACK4(color),
       .direction = UNPACK3(dirA),
-      .fdata = {1.0f},
-      .udata = {thickness},
+      .offsetSS = {-xOffset, yOffset},
   });
   vertices.push_back(ShapeVertex{
       .position = UNPACK3(b),
       .color = UNPACK4(color),
       .direction = UNPACK3(dirB),
-      .fdata = {-1.0f},
-      .udata = {thickness},
+      .offsetSS = {xOffset, -yOffset},
   });
 }
 
@@ -115,7 +111,7 @@ void ShapeRenderer::addLine(float3 a, float3 b, float4 color, uint32_t thickness
   addLine(a, b, direction, direction, color, thickness);
 }
 
-void ShapeRenderer::addCircle(float3 base, float3 xBase, float3 yBase, float radius, float4 color, uint32_t thickness,
+void ShapeRenderer::addCircle(float3 center, float3 xBase, float3 yBase, float radius, float4 color, uint32_t thickness,
                               uint32_t resolution) {
   float3 prevPos;
   float3 prevDelta;
@@ -123,13 +119,60 @@ void ShapeRenderer::addCircle(float3 base, float3 xBase, float3 yBase, float rad
     float t = i / float(resolution - 1) * pi2;
     float tCos = std::cosf(t);
     float tSin = std::sinf(t);
-    float3 pos = base + tCos * xBase * radius + tSin * yBase * radius;
-    float3 delta = base + -tSin * xBase + tCos * yBase;
+    float3 pos = center + tCos * xBase * radius + tSin * yBase * radius;
+    float3 delta = center + -tSin * xBase + tCos * yBase;
     if (i > 0) {
       addLine(prevPos, pos, prevDelta, delta, color, thickness);
     }
     prevPos = pos;
     prevDelta = delta;
+  }
+}
+
+void ShapeRenderer::addRect(float3 center, float3 xBase, float3 yBase, float2 size, float4 color, uint32_t thickness) {
+  float2 halfSize = size / 2.0f;
+  float3 verts[] = {
+      center - halfSize.x * xBase - halfSize.y * yBase,
+      center + halfSize.x * xBase - halfSize.y * yBase,
+      center + halfSize.x * xBase + halfSize.y * yBase,
+      center - halfSize.x * xBase + halfSize.y * yBase,
+  };
+
+  for (size_t i = 0; i < 4; i++) {
+    float3 a = verts[i];
+    float3 b = verts[(i + 1) % 4];
+    addLine(a, b, color, thickness);
+  }
+}
+
+void ShapeRenderer::addBox(float3 center, float3 xBase, float3 yBase, float3 zBase, float3 size, float4 color,
+                           uint32_t thickness) {
+  float3 halfSize = size / 2.0f;
+  float3 verts[] = {
+      center - halfSize.x * xBase - halfSize.y * yBase - halfSize.z * zBase,
+      center + halfSize.x * xBase - halfSize.y * yBase - halfSize.z * zBase,
+      center + halfSize.x * xBase + halfSize.y * yBase - halfSize.z * zBase,
+      center - halfSize.x * xBase + halfSize.y * yBase - halfSize.z * zBase,
+
+      center - halfSize.x * xBase - halfSize.y * yBase + halfSize.z * zBase,
+      center + halfSize.x * xBase - halfSize.y * yBase + halfSize.z * zBase,
+      center + halfSize.x * xBase + halfSize.y * yBase + halfSize.z * zBase,
+      center - halfSize.x * xBase + halfSize.y * yBase + halfSize.z * zBase,
+  };
+
+  auto drawFace4 = [&](size_t start) {
+    for (size_t i = 0; i < 4; i++) {
+      float3 a = verts[start + i];
+      float3 b = verts[start + (i + 1) % 4];
+      addLine(a, b, color, thickness);
+    }
+  };
+  drawFace4(0);
+  drawFace4(4);
+  for (size_t i = 0; i < 4; i++) {
+    float3 a = verts[i];
+    float3 b = verts[i + 4];
+    addLine(a, b, color, thickness);
   }
 }
 

@@ -77,7 +77,7 @@ TEST_CASE("Wireframe", "[Editor]") {
   CHECK(testRenderer->checkFrame("wireframe-backfaces", comparisonTolerance));
 }
 
-TEST_CASE("Lines", "[Editor]") {
+TEST_CASE("Helper lines", "[Editor]") {
   auto testRenderer = createTestRenderer();
   Renderer &renderer = *testRenderer->renderer.get();
 
@@ -147,7 +147,7 @@ TEST_CASE("Lines", "[Editor]") {
   CHECK(testRenderer->checkFrame("helper_lines", comparisonTolerance));
 }
 
-TEST_CASE("Circles", "[Editor]") {
+TEST_CASE("Helper circles", "[Editor]") {
   auto testRenderer = createTestRenderer();
   Renderer &renderer = *testRenderer->renderer.get();
 
@@ -179,7 +179,7 @@ TEST_CASE("Circles", "[Editor]") {
     for (size_t i = 0; i < 8; i++) {
       float r = 0.2f + (0.2f * i);
       uint32_t thickness = (1 + i);
-      uint32_t res = 8+(16*i);
+      uint32_t res = 8 + (16 * i);
       sr.addCircle(float3(0, 0, 0), float3(1, 0, 0), float3(0, 0, 1), r - 0.0f, float4(0, 1, 0, 1), thickness, res);
       sr.addCircle(float3(0, 0, 0), float3(0, 0, 1), float3(0, 1, 0), r - 0.05f, float4(1, 0, 0, 1), thickness, res);
       sr.addCircle(float3(0, 0, 0), float3(1, 0, 0), float3(0, 1, 0), r - 0.1f, float4(0, 0, 1, 1), thickness, res);
@@ -188,5 +188,95 @@ TEST_CASE("Circles", "[Editor]") {
     renderer.render(view, steps);
   };
 
-  CHECK(testRenderer->checkFrame("helper_shapes", comparisonTolerance));
+  CHECK(testRenderer->checkFrame("helper_circles", comparisonTolerance));
+}
+
+TEST_CASE("Helper rectangles", "[Editor]") {
+  auto testRenderer = createTestRenderer();
+  Renderer &renderer = *testRenderer->renderer.get();
+
+  ViewPtr view = std::make_shared<View>();
+  view->view = linalg::lookat_matrix(float3(3.0f, 3.0f, 3.0f), float3(0, 0, 0), float3(0, 1, 0));
+  view->proj = ViewPerspectiveProjection{
+      degToRad(45.0f),
+      FovDirection::Horizontal,
+  };
+
+  DrawQueuePtr editorQueue = std::make_shared<DrawQueue>();
+
+  PipelineSteps steps{
+      makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = editorQueue,
+          .features =
+              {
+                  ScreenSpaceSizeFeature::create(),
+                  features::BaseColor::create(),
+              },
+      }),
+  };
+
+  ShapeRenderer sr;
+  TEST_RENDER_LOOP(testRenderer) {
+    editorQueue->clear();
+
+    sr.begin();
+    for (size_t i = 0; i < 5; i++) {
+      float r = 0.2f + (0.2f * i);
+      float2 size = float2(r - 0.1f, r + 0.1f);
+      uint32_t thickness = (1 + i);
+      sr.addRect(float3(0, 0, 0), float3(1, 0, 0), float3(0, 0, 1), size, float4(0, 1, 0, 1), thickness);
+      sr.addRect(float3(0, 0, 0), float3(0, 0, 1), float3(0, 1, 0), size, float4(1, 0, 0, 1), thickness);
+      sr.addRect(float3(0, 0, 0), float3(1, 0, 0), float3(0, 1, 0), size, float4(0, 0, 1, 1), thickness);
+    }
+    sr.finish(editorQueue);
+    renderer.render(view, steps);
+  };
+
+  CHECK(testRenderer->checkFrame("helper_rectangles", comparisonTolerance));
+}
+
+TEST_CASE("Helper boxes", "[Editor]") {
+  auto testRenderer = createTestRenderer();
+  Renderer &renderer = *testRenderer->renderer.get();
+
+  ViewPtr view = std::make_shared<View>();
+  view->view = linalg::lookat_matrix(float3(3.0f, 3.0f, 3.0f), float3(0, 0, 0), float3(0, 1, 0));
+  view->proj = ViewPerspectiveProjection{
+      degToRad(45.0f),
+      FovDirection::Horizontal,
+  };
+
+  DrawQueuePtr editorQueue = std::make_shared<DrawQueue>();
+
+  PipelineSteps steps{
+      makeDrawablePipelineStep(RenderDrawablesStep{
+          .drawQueue = editorQueue,
+          .features =
+              {
+                  ScreenSpaceSizeFeature::create(),
+                  features::BaseColor::create(),
+              },
+      }),
+  };
+
+  float3 axisX = float3(1, 0, 0);
+  float3 axisY = float3(0, 1, 0);
+  float3 axisZ = float3(0, 0, 1);
+
+  ShapeRenderer sr;
+  TEST_RENDER_LOOP(testRenderer) {
+    editorQueue->clear();
+
+    sr.begin();
+    for (size_t i = 0; i < 3; i++) {
+      float r = 0.2f + (0.2f * i);
+      float3 size = float3(r - 0.1f, r + 0.1f, r + 0.2f);
+      uint32_t thickness = (1 + i);
+      sr.addBox(float3(0, 0, 0), axisX, axisY, axisZ, size, float4(1, 1, 1, 1), thickness);
+    }
+    sr.finish(editorQueue);
+    renderer.render(view, steps);
+  };
+
+  CHECK(testRenderer->checkFrame("helper_boxes", comparisonTolerance));
 }
