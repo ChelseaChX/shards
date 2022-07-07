@@ -100,7 +100,7 @@ if(NOT EMSCRIPTEN)
   endif()
 
   # Required for SDL_main to work
-  add_compile_definitions(SDL2main PUBLIC -Dmain=SDL_main)
+  add_compile_definitions(SDL2main PUBLIC "main=SDL_main")
 endif()
 
 sh_add_external_project(
