@@ -90,7 +90,7 @@ if(EMSCRIPTEN)
     )
   endif()
 else()
-  target_link_libraries(gfx SDL2-static)
+  target_link_libraries(gfx SDL2-static SDL2main)
 endif()
 
 

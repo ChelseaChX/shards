@@ -98,6 +98,9 @@ if(NOT EMSCRIPTEN)
   elseif(LINUX)
     target_link_libraries(SDL2-static INTERFACE dl)
   endif()
+
+  # Required for SDL_main to work
+  add_compile_definitions(SDL2main PUBLIC -Dmain=SDL_main)
 endif()
 
 sh_add_external_project(
