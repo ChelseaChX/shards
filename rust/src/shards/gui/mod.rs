@@ -5,12 +5,14 @@ use crate::core::registerShard;
 use crate::shard::Shard;
 use crate::shardsc;
 use crate::types::common_type;
+use crate::types::ClonedVar;
 use crate::types::ExposedTypes;
 use crate::types::ParamVar;
 use crate::types::ShardsVar;
 use crate::types::Type;
 use crate::types::FRAG_CC;
 use egui::Context as EguiNativeContext;
+use egui::TextBuffer;
 use std::ffi::c_void;
 
 static BOOL_OR_NONE_SLICE: &[Type] = &[common_type::bool, common_type::none];
@@ -72,4 +74,24 @@ pub fn registerShards() {
   containers::registerShards();
   registerShard::<EguiContext>();
   widgets::registerShards();
+}
+
+impl AsRef<str> for ClonedVar {
+  fn as_ref(&self) -> &str {
+    <&str>::try_from(&self.0).unwrap()
+  }
+}
+
+impl TextBuffer for ClonedVar {
+  fn is_mutable(&self) -> bool {
+    true
+  }
+
+  fn insert_text(&mut self, text: &str, char_index: usize) -> usize {
+    let byte_idx = self.byte_index_from_char_index(char_index);
+  }
+
+  fn delete_char_range(&mut self, char_range: std::ops::Range<usize>) {
+    todo!()
+  }
 }
