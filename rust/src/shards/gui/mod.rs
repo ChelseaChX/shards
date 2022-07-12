@@ -10,6 +10,7 @@ use crate::types::ExposedTypes;
 use crate::types::ParamVar;
 use crate::types::ShardsVar;
 use crate::types::Type;
+use crate::types::Var;
 use crate::types::FRAG_CC;
 use egui::Context as EguiNativeContext;
 use egui::TextBuffer;
@@ -93,6 +94,44 @@ impl TextBuffer for ClonedVar {
     } else {
       self.byte_index_from_char_index(char_index)
     };
+
+    // TODO to finish
+    // let text_len = text.len();
+    // let current_len =
+    //   unsafe { self.0.payload.__bindgen_anon_1.__bindgen_anon_2.stringLen as usize };
+    // let current_cap = unsafe {
+    //   self
+    //     .0
+    //     .payload
+    //     .__bindgen_anon_1
+    //     .__bindgen_anon_2
+    //     .stringCapacity as usize
+    // };
+
+    // if current_cap == 0usize {
+    //   // this should be by the spec of String insert_str (egui uses)
+    //   debug_assert!(byte_idx == 0usize);
+
+    //   // Totally new string
+    //   let s = Var::ephemeral_string(text);
+    //   *self = s.into();
+    // } else if (current_len - byte_idx) >= text_len {
+    //   // We can fit the text in the current string
+    //   // TODO
+    // } else {
+    //   // We need to make the string bigger
+    //   let mut s = String::from(self.as_ref());
+    //   s.insert_str(byte_idx, text);
+    //   let s = Var::ephemeral_string(s.as_str());
+    //   *self = s.into();
+    // }
+
+    let mut s = String::from(self.as_ref());
+    s.insert_str(byte_idx, text);
+    let s = Var::ephemeral_string(s.as_str());
+    *self = s.into();
+
+    text.chars().count()
   }
 
   fn delete_char_range(&mut self, char_range: std::ops::Range<usize>) {
