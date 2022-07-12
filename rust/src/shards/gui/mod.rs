@@ -88,7 +88,11 @@ impl TextBuffer for ClonedVar {
   }
 
   fn insert_text(&mut self, text: &str, char_index: usize) -> usize {
-    let byte_idx = self.byte_index_from_char_index(char_index);
+    let byte_idx = if !self.0.is_string() {
+      0usize
+    } else {
+      self.byte_index_from_char_index(char_index)
+    };
   }
 
   fn delete_char_range(&mut self, char_range: std::ops::Range<usize>) {
