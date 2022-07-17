@@ -21,7 +21,7 @@ if(NOT EMSCRIPTEN)
     libressl
     URL      https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.4.1.tar.gz
     URL_HASH SHA256=107ceae6ca800e81cb563584c16afa36d6c7138fade94a2b3e9da65456f7c61c
-    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_LIST_DIR}/libressl.patch 
+    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_LIST_DIR}/libressl.patch
   )
   FetchContent_MakeAvailable(libressl)
   message(STATUS "libressl_SOURCE_DIR=${libressl_SOURCE_DIR}")
@@ -46,7 +46,7 @@ FetchContent_MakeAvailable(boost)
 message(STATUS "boost_SOURCE_DIR=${boost_SOURCE_DIR}")
 
 if(NOT EMSCRIPTEN)
-  if(EXTERNAL_BUILD_TYPE MATCHES "Debug")
+  if(NOT ANDROID AND EXTERNAL_BUILD_TYPE MATCHES "Debug")
     set(SDL_LIB_SUFFIX "d")
   endif()
 
