@@ -99,8 +99,12 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(SDL2-static INTERFACE dl)
   endif()
 
-  # Required for SDL_main to work
-  add_compile_definitions(SDL2main PUBLIC "main=SDL_main")
+  # Required for SDL2main entry point to call main
+  if(NOT DESKTOP)
+    add_compile_definitions(SDL2main PUBLIC "main=SDL_main")
+  else()
+    add_compile_definitions(SDL2main PUBLIC "SDL_MAIN_HANDLED=1")
+  endif()
 endif()
 
 sh_add_external_project(
