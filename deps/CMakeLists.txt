@@ -103,7 +103,7 @@ if(NOT EMSCRIPTEN)
   if(NOT DESKTOP)
     add_compile_definitions(SDL2main PUBLIC "main=SDL_main")
   else()
-    add_compile_definitions(SDL2main PUBLIC "SDL_MAIN_HANDLED=1")
+    add_compile_definitions(SDL2-static PUBLIC "SDL_MAIN_HANDLED=1")
   endif()
 endif()
 
