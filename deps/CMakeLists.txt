@@ -101,9 +101,9 @@ if(NOT EMSCRIPTEN)
 
   # Required for SDL2main entry point to call main
   if(NOT DESKTOP)
-    add_compile_definitions(SDL2main PUBLIC "main=SDL_main")
+    target_compile_definitions(SDL2main INTERFACE "main=SDL_main")
   else()
-    add_compile_definitions(SDL2-static PUBLIC "SDL_MAIN_HANDLED=1")
+    target_compile_definitions(SDL2-static INTERFACE "SDL_MAIN_HANDLED=1")
   endif()
 endif()
 
