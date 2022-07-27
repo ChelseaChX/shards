@@ -6,6 +6,7 @@
 #include <gfx/mesh.hpp>
 #include <gfx/texture.hpp>
 #include <gfx/texture_file/texture_file.hpp>
+#include <Tracy.hpp>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -145,6 +146,8 @@ struct Loader {
 
   void reorderVertexAttributes(std::vector<const tinygltf::Accessor *> &accessors, std::vector<size_t> &offsets,
                                MeshFormat &format) {
+    ZoneScoped;
+
     int positionIndex = -1;
     for (size_t i = 0; i < format.vertexAttributes.size(); i++) {
       if (format.vertexAttributes[i].name == "position") {
@@ -169,6 +172,8 @@ struct Loader {
   }
 
   DrawablePtr loadPrimitive(tinygltf::Primitive &primitive) {
+    ZoneScoped;
+
     std::vector<const tinygltf::Accessor *> accessors;
     std::vector<size_t> offsets;
     size_t vertexStride{};
@@ -293,6 +298,8 @@ struct Loader {
   }
 
   void loadMeshes() {
+    ZoneScoped;
+
     size_t numMeshes = model.meshes.size();
     meshMap.resize(numMeshes);
 
@@ -308,6 +315,8 @@ struct Loader {
   }
 
   void initNode(size_t nodeIndex) {
+    ZoneScoped;
+
     DrawableHierarchyPtr &node = nodeMap[nodeIndex];
     node = std::make_shared<DrawableHierarchy>();
 
@@ -335,6 +344,8 @@ struct Loader {
   }
 
   void loadNodes() {
+    ZoneScoped;
+
     size_t numNodes = model.nodes.size();
     nodeMap.resize(numNodes);
     for (size_t i = 0; i < numNodes; i++) {
@@ -344,11 +355,17 @@ struct Loader {
   }
 
   void loadTextures() {
+    ZoneScoped;
+
     size_t numTextures = model.textures.size();
     textureMap.resize(numTextures);
     for (size_t i = 0; i < numTextures; i++) {
+      ZoneNamedN(_loadTexture, "loadTexture", true);
+
       const tinygltf::Texture &gltfTexture = model.textures[i];
       const tinygltf::Image &gltfImage = model.images[gltfTexture.source];
+
+      ZoneTextV(_loadTexture, gltfTexture.name.c_str(), gltfTexture.name.size());
 
       TexturePtr &texture = textureMap[i];
       texture = std::make_shared<Texture>();
@@ -365,13 +382,19 @@ struct Loader {
   }
 
   void loadMaterials() {
+    ZoneScoped;
+
     size_t numMaterials = model.materials.size();
     materialMap.resize(numMaterials);
     for (size_t i = 0; i < model.materials.size(); i++) {
+      ZoneNamedN(_loadMaterial, "loadMaterial", true);
+
       MaterialPtr &material = materialMap[i];
       material = std::make_shared<Material>();
 
       const tinygltf::Material &gltfMaterial = model.materials[i];
+
+      ZoneTextV(_loadMaterial, gltfMaterial.name.c_str(), gltfMaterial.name.size());
 
       auto convertTextureParam = [&](const char *name, const TextureInfo &textureInfo) {
         if (textureInfo.index >= 0) {
@@ -401,6 +424,8 @@ struct Loader {
   }
 
   void load() {
+    ZoneScoped;
+
     loadTextures();
     loadMaterials();
     loadMeshes();
@@ -430,6 +455,8 @@ struct Loader {
 };
 
 template <typename T> DrawableHierarchyPtr load(T loader) {
+  ZoneScoped;
+
   tinygltf::Model model;
   loader(model);
 
@@ -444,6 +471,9 @@ template <typename T> DrawableHierarchyPtr load(T loader) {
 }
 
 DrawableHierarchyPtr loadGltfFromFile(const char *inFilepath) {
+  ZoneScoped;
+  ZoneText(inFilepath, strlen(inFilepath));
+
   tinygltf::TinyGLTF context;
   auto loader = [&](tinygltf::Model &model) {
     fs::path filepath(inFilepath);
@@ -471,6 +501,8 @@ DrawableHierarchyPtr loadGltfFromFile(const char *inFilepath) {
 }
 
 DrawableHierarchyPtr loadGltfFromMemory(const uint8_t *data, size_t dataLength) {
+  ZoneScoped;
+
   tinygltf::TinyGLTF context;
   auto loader = [&](tinygltf::Model &model) {
     std::string err;

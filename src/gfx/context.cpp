@@ -4,6 +4,7 @@
 #include "platform.hpp"
 #include "platform_surface.hpp"
 #include "window.hpp"
+#include <Tracy.hpp>
 #include <magic_enum.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
@@ -114,6 +115,8 @@ struct ContextMainOutput {
   }
 
   WGPUSurface initSurface(WGPUInstance instance, void *overrideNativeWindowHandle) {
+    ZoneScoped;
+
     if (!wgpuWindowSurface) {
       void *surfaceHandle = overrideNativeWindowHandle;
 
@@ -132,6 +135,7 @@ struct ContextMainOutput {
   }
 
   bool requestFrame() {
+    ZoneScoped;
     assert(!currentView);
     currentView = wgpuSwapChainGetCurrentTextureView(wgpuSwapchain);
 
@@ -139,6 +143,7 @@ struct ContextMainOutput {
   }
 
   void present() {
+    ZoneScoped;
     assert(currentView);
 
     // Web doesn't have a swapchain, it automatically present the current texture when control
@@ -148,15 +153,21 @@ struct ContextMainOutput {
 #endif
 
     currentView = nullptr;
+
+    FrameMark;
   }
 
   void initSwapchain(WGPUAdapter adapter, WGPUDevice device) {
+    ZoneScoped;
+
     swapchainFormat = wgpuSurfaceGetPreferredFormat(wgpuWindowSurface, adapter);
     int2 mainOutputSize = window->getDrawableSize();
     resizeSwapchain(device, adapter, mainOutputSize);
   }
 
   void resizeSwapchain(WGPUDevice device, WGPUAdapter adapter, const int2 &newSize) {
+    ZoneScoped;
+
     WGPUTextureFormat preferredFormat = wgpuSurfaceGetPreferredFormat(wgpuWindowSurface, adapter);
 
     // Force the backbuffer to srgb format so we don't have to convert manually in shader
@@ -223,6 +234,8 @@ Window &Context::getWindow() {
 }
 
 void Context::resizeMainOutputConditional(const int2 &newSize) {
+  ZoneScoped;
+
   if (state != ContextState::Ok)
     return;
 
@@ -250,7 +263,8 @@ WGPUTextureFormat Context::getMainOutputFormat() const {
 
 bool Context::isHeadless() const { return !mainOutput; }
 
-void Context::addContextDataInternal(const std::weak_ptr<ContextData>& ptr) {
+void Context::addContextDataInternal(const std::weak_ptr<ContextData> &ptr) {
+  ZoneScoped;
   assert(!ptr.expired());
 
   std::shared_ptr<ContextData> sharedPtr = ptr.lock();
@@ -259,9 +273,13 @@ void Context::addContextDataInternal(const std::weak_ptr<ContextData>& ptr) {
   }
 }
 
-void Context::removeContextDataInternal(ContextData *ptr) { contextDatas.erase(ptr); }
+void Context::removeContextDataInternal(ContextData *ptr) {
+  ZoneScoped;
+  contextDatas.erase(ptr);
+}
 
 void Context::collectContextData() {
+  ZoneScoped;
   for (auto it = contextDatas.begin(); it != contextDatas.end();) {
     if (it->second.expired()) {
       it = contextDatas.erase(it);
@@ -272,6 +290,7 @@ void Context::collectContextData() {
 }
 
 void Context::releaseAllContextData() {
+  ZoneScoped;
   auto contextDatas = std::move(this->contextDatas);
   for (auto &obj : contextDatas) {
     if (!obj.second.expired()) {
@@ -281,6 +300,7 @@ void Context::releaseAllContextData() {
 }
 
 bool Context::beginFrame() {
+  ZoneScoped;
   assert(frameState == ContextFrameState::Ok);
 
   // Automatically request
@@ -321,6 +341,7 @@ bool Context::beginFrame() {
 }
 
 void Context::endFrame() {
+  ZoneScoped;
   assert(frameState == ContextFrameState::WaitingForEnd);
 
   if (!isHeadless())
@@ -330,6 +351,7 @@ void Context::endFrame() {
 }
 
 void Context::sync() {
+  ZoneScoped;
 #ifdef WEBGPU_NATIVE
   wgpuDevicePoll(wgpuDevice, true, nullptr);
 #endif
@@ -351,7 +373,10 @@ void Context::suspend() {
 
 void Context::resume() { suspended = false; }
 
-void Context::submit(WGPUCommandBuffer cmdBuffer) { wgpuQueueSubmit(wgpuQueue, 1, &cmdBuffer); }
+void Context::submit(WGPUCommandBuffer cmdBuffer) {
+  ZoneScoped;
+  wgpuQueueSubmit(wgpuQueue, 1, &cmdBuffer);
+}
 
 void Context::deviceLost() {
   if (state != ContextState::Incomplete) {
@@ -363,6 +388,7 @@ void Context::deviceLost() {
 }
 
 void Context::tickRequesting() {
+  ZoneScoped;
   SPDLOG_LOGGER_DEBUG(getLogger(), "tickRequesting");
   try {
     if (adapterRequest) {
@@ -398,6 +424,7 @@ void Context::tickRequesting() {
 }
 
 void Context::deviceObtained() {
+  ZoneScoped;
   state = ContextState::Ok;
   SPDLOG_LOGGER_DEBUG(getLogger(), "wgpuDevice obtained");
 
@@ -424,6 +451,7 @@ void Context::deviceObtained() {
 }
 
 void Context::requestDevice() {
+  ZoneScoped;
   assert(!wgpuDevice);
   assert(!wgpuQueue);
 
@@ -453,6 +481,7 @@ void Context::requestDevice() {
 }
 
 void Context::releaseDevice() {
+  ZoneScoped;
   releaseAllContextData();
 
   if (mainOutput) {
@@ -470,6 +499,7 @@ WGPUSurface Context::getOrCreateSurface() {
 }
 
 void Context::requestAdapter() {
+  ZoneScoped;
   assert(!wgpuAdapter);
 
   state = ContextState::Requesting;
@@ -504,11 +534,13 @@ void Context::requestAdapter() {
 }
 
 void Context::releaseAdapter() {
+  ZoneScoped;
   releaseDevice();
   WGPU_SAFE_RELEASE(wgpuAdapterRelease, wgpuAdapter);
 }
 
 void Context::initCommon() {
+  ZoneScoped;
   SPDLOG_LOGGER_DEBUG(getLogger(), "initCommon");
 
   assert(!isInitialized());
@@ -547,6 +579,7 @@ void Context::initCommon() {
 }
 
 void Context::present() {
+  ZoneScoped;
   assert(mainOutput);
   mainOutput->present();
 }
