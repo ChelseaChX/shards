@@ -40,12 +40,14 @@ target_link_libraries(gfx
   spdlog stb xxHash Boost::algorithm Boost::filesystem
 )
 target_precompile_headers(gfx PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp>")
+target_link_libraries(gfx Tracy::TracyClient)
 
 add_library(gfx_texture_file texture_file/texture_file.cpp)
 target_link_libraries(gfx_texture_file gfx)
 
 add_library(gfx_gltf gltf/gltf.cpp)
 target_link_libraries(gfx_gltf gfx tinygltf)
+target_compile_options(gfx_gltf PRIVATE "-O3")
 
 add_library(gfx_imgui
   imgui/imgui.cpp

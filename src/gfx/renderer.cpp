@@ -17,6 +17,7 @@
 #include "texture_placeholder.hpp"
 #include "view.hpp"
 #include "view_texture.hpp"
+#include <Tracy.hpp>
 #include <algorithm>
 #include <magic_enum.hpp>
 #include <spdlog/spdlog.h>
@@ -64,6 +65,7 @@ private:
 
 public:
   TextureId assign(Context &context, Texture *texture) {
+    ZoneScoped;
     if (!texture)
       return ~0;
 
@@ -82,7 +84,9 @@ public:
       return id;
     }
   }
+
   TextureContextData *resolve(TextureId id) const {
+    ZoneScoped;
     if (id == TextureId(~0))
       return nullptr;
     else {
@@ -149,6 +153,7 @@ struct CachedPipeline {
   DynamicWGPUBufferPool instanceBufferPool;
 
   void resetDrawables() {
+    ZoneScoped;
     drawables.clear();
     drawablesSorted.clear();
     drawGroups.clear();
@@ -158,6 +163,7 @@ struct CachedPipeline {
   void resetPools() { instanceBufferPool.reset(); }
 
   void release() {
+    ZoneScoped;
     wgpuPipelineLayoutRelease(pipelineLayout);
     wgpuShaderModuleRelease(shaderModule);
     wgpuRenderPipelineRelease(pipeline);
@@ -171,6 +177,7 @@ struct CachedPipeline {
 typedef std::shared_ptr<CachedPipeline> CachedPipelinePtr;
 
 static void packDrawData(uint8_t *outData, size_t outSize, const UniformBufferLayout &layout, const DrawData &drawData) {
+  ZoneScoped;
   size_t layoutIndex = 0;
   for (auto &fieldName : layout.fieldNames) {
     auto drawDataIt = drawData.data.find(fieldName);
@@ -254,6 +261,8 @@ struct RendererImpl final : public ContextData {
   }
 
   virtual void releaseContextData() override {
+    ZoneScoped;
+
     context.sync();
     // Flush in-flight frame resources
     for (size_t i = 0; i < maxBufferedFrames; i++) {
@@ -267,18 +276,24 @@ struct RendererImpl final : public ContextData {
   size_t alignToArrayBounds(size_t size, size_t elementAlign) const { return alignTo(size, elementAlign); }
 
   void updateMainOutputFromContext() {
+    ZoneScoped;
+
     mainOutput.format = context.getMainOutputFormat();
     mainOutput.view = context.getMainOutputTextureView();
     mainOutput.size = context.getMainOutputSize();
   }
 
   void renderViews(const std::vector<ViewPtr> &views, const PipelineSteps &pipelineSteps) {
+    ZoneScoped;
+
     for (auto &view : views) {
       renderView(view, pipelineSteps);
     }
   }
 
   void renderView(ViewPtr view, const PipelineSteps &pipelineSteps) {
+    ZoneScoped;
+
     View *viewPtr = view.get();
 
     Rect viewport;
@@ -328,6 +343,8 @@ struct RendererImpl final : public ContextData {
   }
 
   WGPUBuffer createTransientBuffer(size_t size, WGPUBufferUsageFlags flags, const char *label = nullptr) {
+    ZoneScoped;
+
     WGPUBufferDescriptor desc = {};
     desc.size = size;
     desc.label = label;
@@ -338,12 +355,16 @@ struct RendererImpl final : public ContextData {
   }
 
   void addFrameReference(std::shared_ptr<ContextData> &&contextData) {
+    ZoneScoped;
+
     frameReferences(frameIndex).contextDataReferences.emplace_back(std::move(contextData));
   }
 
   void onFrameCleanup(std::function<void()> &&callback) { postFrameQueue(frameIndex).emplace_back(std::move(callback)); }
 
   void beginFrame() {
+    ZoneScoped;
+
     // This registers ContextData so that releaseContextData is called when GPU resources are invalidated
     if (!isBoundToContext())
       initializeContextData();
@@ -359,6 +380,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void endFrame() {
+    ZoneScoped;
+
     // FIXME Add renderer graph to handle clearing
     if (!mainOutputWrittenTo && !context.isHeadless()) {
       submitDummyRenderPass();
@@ -368,6 +391,8 @@ struct RendererImpl final : public ContextData {
   WGPUColor clearColor{.r = 0.0f, .g = 0.0f, .b = 0.0f, .a = 0.0f};
 
   void submitDummyRenderPass() {
+    ZoneScoped;
+
     WGPUCommandEncoderDescriptor desc = {};
     WGPUCommandEncoder commandEncoder = wgpuDeviceCreateCommandEncoder(context.wgpuDevice, &desc);
 
@@ -392,6 +417,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void swapBuffers() {
+    ZoneScoped;
+
     frameIndex = (frameIndex + 1) % maxBufferedFrames;
 
     frameReferences(frameIndex).clear();
@@ -419,6 +446,8 @@ struct RendererImpl final : public ContextData {
   };
 
   WGPUBindGroup createBindGroup(WGPUDevice device, WGPUBindGroupLayout layout, std::vector<Bindable> bindables) {
+    ZoneScoped;
+
     WGPUBindGroupDescriptor desc = {};
     desc.label = "view";
     std::vector<WGPUBindGroupEntry> entries;
@@ -442,6 +471,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void fillInstanceBuffer(DynamicWGPUBuffer &instanceBuffer, CachedPipeline &cachedPipeline, View *view) {
+    ZoneScoped;
+
     size_t alignedObjectBufferSize =
         alignToArrayBounds(cachedPipeline.objectBufferLayout.size, cachedPipeline.objectBufferLayout.maxAlignment);
     size_t numObjects = cachedPipeline.drawablesSorted.size();
@@ -491,6 +522,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void buildBaseObjectParameters(CachedPipeline &cachedPipeline) {
+    ZoneScoped;
+
     for (const Feature *feature : cachedPipeline.features) {
       for (auto &param : feature->shaderParams) {
         cachedPipeline.baseDrawData.setParam(param.name, param.defaultValue);
@@ -499,6 +532,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void depthSortBackToFront(CachedPipeline &cachedPipeline, const View &view) {
+    ZoneScoped;
+
     const CachedViewData &viewData = *viewCache[&view].get();
 
     float4x4 viewProjMatrix = linalg::mul(viewData.projectionMatrix, view.view);
@@ -517,6 +552,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void generateTextureIds(CachedPipeline &cachedPipeline, SortableDrawable &drawable) {
+    ZoneScoped;
+
     std::vector<TextureId> &textureIds = drawable.textureIds.textures;
     textureIds.reserve(cachedPipeline.textureBindingLayout.bindings.size());
 
@@ -543,6 +580,8 @@ struct RendererImpl final : public ContextData {
   }
 
   SortableDrawable createSortableDrawable(CachedPipeline &cachedPipeline, Drawable &drawable) {
+    ZoneScoped;
+
     SortableDrawable sortableDrawable{};
     sortableDrawable.drawable = &drawable;
     generateTextureIds(cachedPipeline, sortableDrawable);
@@ -552,6 +591,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void sortAndBatchDrawables(CachedPipeline &cachedPipeline, const RenderDrawablesStep &step, const View &view) {
+    ZoneScoped;
+
     std::vector<SortableDrawable> &drawablesSorted = cachedPipeline.drawablesSorted;
 
     // Sort drawables based on mesh/texture bindings
@@ -603,12 +644,16 @@ struct RendererImpl final : public ContextData {
   }
 
   void resetPipelineCacheDrawables() {
+    ZoneScoped;
+
     for (auto &pair : pipelineCache) {
       pair.second->resetDrawables();
     }
   }
 
   WGPUBindGroup createTextureBindGroup(CachedPipeline &cachedPipeline, const TextureIds &textureIds) {
+    ZoneScoped;
+
     std::vector<WGPUBindGroupEntry> entries;
     size_t bindingIndex = 0;
     for (auto &id : textureIds.textures) {
@@ -642,6 +687,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void renderDrawables(RenderDrawablesStep &step, ViewPtr view, Rect viewport, WGPUBuffer viewBuffer) {
+    ZoneScoped;
+
     if (!step.drawQueue)
       throw std::runtime_error("No draw queue assigned to drawable step");
 
@@ -759,6 +806,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void groupByPipeline(RenderDrawablesStep &step, const std::vector<DrawablePtr> &drawables) {
+    ZoneScoped;
+
     // TODO: Paralellize
     std::vector<const Feature *> features;
     const std::vector<FeaturePtr> *featureSources[3] = {&step.features, nullptr, nullptr};
@@ -811,6 +860,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void buildTextureBindingLayout(CachedPipeline &cachedPipeline, const Material *material) {
+    ZoneScoped;
+
     TextureBindingLayoutBuilder textureBindingLayoutBuilder;
     for (auto &feature : cachedPipeline.features) {
       for (auto &textureParam : feature->textureParams) {
@@ -829,6 +880,8 @@ struct RendererImpl final : public ContextData {
   }
 
   shader::GeneratorOutput generateShader(const CachedPipeline &cachedPipeline) {
+    ZoneScoped;
+
     using namespace shader;
     using namespace shader::blocks;
 
@@ -862,6 +915,8 @@ struct RendererImpl final : public ContextData {
   }
 
   void buildObjectBufferLayout(CachedPipeline &cachedPipeline) {
+    ZoneScoped;
+
     UniformBufferLayoutBuilder objectBufferLayoutBuilder;
     objectBufferLayoutBuilder.push("world", FieldTypes::Float4x4);
     objectBufferLayoutBuilder.push("worldInvTrans", FieldTypes::Float4x4);
@@ -875,6 +930,8 @@ struct RendererImpl final : public ContextData {
   }
 
   FeaturePipelineState computePipelineState(const std::vector<const Feature *> &features) {
+    ZoneScoped;
+
     FeaturePipelineState state{};
     for (const Feature *feature : features) {
       state = state.combine(feature->state);
@@ -884,6 +941,8 @@ struct RendererImpl final : public ContextData {
 
   // Bindgroup 0, the per-batch bound resources
   WGPUBindGroupLayout createBatchBindGroupLayout() {
+    ZoneScoped;
+
     std::vector<WGPUBindGroupLayoutEntry> bindGroupLayoutEntries;
 
     WGPUBindGroupLayoutEntry &viewEntry = bindGroupLayoutEntries.emplace_back();
@@ -907,6 +966,8 @@ struct RendererImpl final : public ContextData {
 
   // Bindgroup 1, bound textures
   WGPUBindGroupLayout createTextureBindGroupLayout(CachedPipeline &cachedPipeline) {
+    ZoneScoped;
+
     std::vector<WGPUBindGroupLayoutEntry> bindGroupLayoutEntries;
 
     size_t bindingIndex = 0;
@@ -934,6 +995,8 @@ struct RendererImpl final : public ContextData {
   }
 
   WGPUPipelineLayout createPipelineLayout(CachedPipeline &cachedPipeline) {
+    ZoneScoped;
+
     assert(!cachedPipeline.pipelineLayout);
     assert(cachedPipeline.bindGroupLayouts.empty());
 
@@ -976,6 +1039,8 @@ struct RendererImpl final : public ContextData {
   };
 
   void buildPipeline(CachedPipeline &cachedPipeline) {
+    ZoneScoped;
+
     buildObjectBufferLayout(cachedPipeline);
     buildBaseObjectParameters(cachedPipeline);
 

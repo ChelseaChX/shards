@@ -1,6 +1,7 @@
 #include "mesh.hpp"
 #include "context.hpp"
 #include "math.hpp"
+#include <Tracy.hpp>
 #include <cassert>
 #include <magic_enum.hpp>
 #include <spdlog/spdlog.h>
@@ -18,6 +19,8 @@ size_t MeshFormat::getVertexSize() const {
 
 void Mesh::update(const MeshFormat &format, const void *inVertexData, size_t vertexDataLength, const void *inIndexData,
                   size_t indexDataLength) {
+  ZoneScoped;
+
   this->format = format;
 
   size_t vertexSize = format.getVertexSize();
@@ -36,6 +39,8 @@ void Mesh::update(const MeshFormat &format, const void *inVertexData, size_t ver
 }
 
 void Mesh::update(const MeshFormat &format, std::vector<uint8_t> &&vertexData, std::vector<uint8_t> &&indexData) {
+  ZoneScoped;
+
   this->format = format;
 
   size_t vertexSize = format.getVertexSize();
@@ -71,6 +76,8 @@ void Mesh::initContextData(Context &context, MeshContextData &contextData) {
 }
 
 void Mesh::updateContextData(Context &context, MeshContextData &contextData) {
+  ZoneScoped;
+
   if (!updateData)
     return;
   updateData = false;
