@@ -73,8 +73,8 @@ const egui::Input *EguiInputTranslator::translateFromInputEvents(const std::vect
   reset();
 
   float eguiDrawScale = EguiRenderer::getDrawScale(window) * scalingFactor;
-  float2 windowToDrawableScale = float2(window.getDrawableSize()) / float2(window.getSize());
-  float2 windowToEguiScale = windowToDrawableScale / eguiDrawScale;
+  float2 drawableScale = float2(window.getDrawableSize()) / float2(window.getSize());
+  float2 windowToEguiScale = drawableScale / eguiDrawScale;
   float2 eguiScreenSize = window.getDrawableSize() / eguiDrawScale;
 
   input.screenRect = egui::Rect{
