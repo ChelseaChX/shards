@@ -30,6 +30,15 @@ struct Checkbox {
   should_expose: bool,
 }
 
+struct CodeEditor {
+  parents: ParamVar,
+  requiring: ExposedTypes,
+  variable: ParamVar,
+  exposing: ExposedTypes,
+  should_expose: bool,
+  mutable_text: bool,
+}
+
 struct Hyperlink {
   parents: ParamVar,
   requiring: ExposedTypes,
@@ -131,6 +140,7 @@ decl_ui_slider!(IntSlider, i64);
 
 mod button;
 mod checkbox;
+mod code_editor;
 mod hyperlink;
 mod image;
 mod image_button;
@@ -145,6 +155,7 @@ mod text_input;
 pub fn registerShards() {
   registerShard::<Button>();
   registerShard::<Checkbox>();
+  registerShard::<CodeEditor>();
   registerShard::<Hyperlink>();
   registerShard::<Image>();
   registerShard::<ImageButton>();
