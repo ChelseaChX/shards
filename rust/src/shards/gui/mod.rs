@@ -71,11 +71,18 @@ struct Reset {
   requiring: ExposedTypes,
 }
 
+struct Style {
+  parents: ParamVar,
+  requiring: ExposedTypes,
+  color: ParamVar,
+}
+
 mod containers;
 mod context;
 mod layouts;
 mod menus;
 mod reset;
+mod style;
 mod widgets;
 
 mod util;
@@ -86,5 +93,6 @@ pub fn registerShards() {
   layouts::registerShards();
   menus::registerShards();
   registerShard::<Reset>();
+  registerShard::<Style>();
   widgets::registerShards();
 }
