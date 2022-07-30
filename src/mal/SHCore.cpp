@@ -15,6 +15,7 @@
 #ifdef SHARDS_DESKTOP
 #include <boost/process/environment.hpp>
 #endif
+#include <profiling.hpp>
 #include <boost/filesystem.hpp>
 #include <chrono>
 #include <fstream>
@@ -88,6 +89,8 @@ static std::map<malEnv *, std::shared_ptr<Observer>> observers;
 void installSHCore(const malEnvPtr &env, const char *exePath, const char *scriptPath) {
   // Setup logging first
   shards::setupSpdLogConditional();
+
+  shards::setupProfiling();
 
   std::shared_ptr<Observer> obs;
   setupObserver(obs, env);

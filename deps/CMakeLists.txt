@@ -207,4 +207,6 @@ target_include_directories(utf8.h INTERFACE utf8.h)
 add_library(pdqsort INTERFACE)
 target_include_directories(pdqsort INTERFACE pdqsort)
 
+set(TRACY_MANUAL_LIFETIME ON CACHE BOOL "" FORCE)
+set(TRACY_DELAYED_INIT ON CACHE BOOL "" FORCE)
 add_subdirectory(tracy)

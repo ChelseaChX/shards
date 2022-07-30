@@ -40,7 +40,7 @@ target_link_libraries(gfx
   spdlog stb xxHash Boost::algorithm Boost::filesystem
 )
 target_precompile_headers(gfx PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp>")
-target_link_libraries(gfx Tracy::TracyClient)
+target_link_libraries(gfx profiling)
 
 add_library(gfx_texture_file texture_file/texture_file.cpp)
 target_link_libraries(gfx_texture_file gfx)
@@ -103,7 +103,6 @@ else()
   endif()
 endif()
 
-
 if(ANDROID)
   target_link_libraries(gfx android OpenSLES)
 endif()
@@ -112,10 +111,15 @@ if(NOT EMSCRIPTEN)
   set(WGPU_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/wgpu-native)
   file(GLOB_RECURSE EXTRA_SOURCES ${WGPU_NATIVE_PATH}/ffi/*.h)
 
+  if(TRACY_ENABLE)
+    list(APPEND WGPU_FEATURES "profile")
+  endif()
+
   add_rust_library(
     NAME wgpu-native
     PROJECT_PATH ${WGPU_NATIVE_PATH}
     DEPENDS ${EXTRA_SOURCES}
+    FEATURES ${WGPU_FEATURES}
   )
 
   target_include_directories(wgpu-native-rust INTERFACE ${WGPU_NATIVE_PATH}/ffi)

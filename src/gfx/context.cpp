@@ -4,7 +4,7 @@
 #include "platform.hpp"
 #include "platform_surface.hpp"
 #include "window.hpp"
-#include <Tracy.hpp>
+#include <profiling.hpp>
 #include <magic_enum.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
@@ -216,7 +216,9 @@ struct ContextMainOutput {
   void releaseSwapchain() { WGPU_SAFE_RELEASE(wgpuSwapChainRelease, wgpuSwapchain); }
 };
 
-Context::Context() {}
+Context::Context() {
+  shards::setupProfiling();
+}
 Context::~Context() { release(); }
 
 void Context::init(Window &window, const ContextCreationOptions &inOptions) {
