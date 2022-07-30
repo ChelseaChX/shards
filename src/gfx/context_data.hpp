@@ -3,6 +3,15 @@
 
 #include <cassert>
 #include <memory>
+#include <string>
+
+#ifndef NDEBUG
+#define GFX_CONTEXT_DATA_DEBUG_INFO 1
+#endif
+
+#ifndef GFX_CONTEXT_DATA_DEBUG_INFO
+#define GFX_CONTEXT_DATA_DEBUG_INFO 0
+#endif
 
 namespace gfx {
 
@@ -15,9 +24,27 @@ struct ContextData : public std::enable_shared_from_this<ContextData> {
 private:
   Context *context = nullptr;
 
+#if GFX_CONTEXT_DATA_DEBUG_INFO
+  std::string debugTag;
+#endif
+
 public:
   ContextData() = default;
   virtual ~ContextData() = default;
+
+  void setDebugTag(std::string &&name) {
+#if GFX_CONTEXT_DATA_DEBUG_INFO
+    debugTag = name;
+#endif
+  }
+
+  const char *getDebugTag() const {
+#if GFX_CONTEXT_DATA_DEBUG_INFO
+    return debugTag.c_str();
+#else
+    return "<unknown>";
+#endif
+  }
 
   void releaseContextDataConditional();
   Context &getContext() {

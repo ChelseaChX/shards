@@ -53,6 +53,7 @@ struct TextureContextData : public ContextData {
 
   WGPUExtent3D size{};
 
+  TextureContextData() { setDebugTag("texture"); }
   ~TextureContextData() { releaseContextDataConditional(); }
   void releaseContextData() override {
     WGPU_SAFE_RELEASE(wgpuTextureRelease, texture);

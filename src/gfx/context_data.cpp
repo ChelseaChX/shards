@@ -1,5 +1,6 @@
 #include "context_data.hpp"
 #include "context.hpp"
+#include <spdlog/spdlog.h>
 
 namespace gfx {
 void ContextData::bindToContext(Context &context) {
@@ -16,6 +17,8 @@ void ContextData::unbindFromContext() {
 
 void ContextData::releaseContextDataConditional() {
   if (context) {
+    SPDLOG_INFO("releaseContextData({})", getDebugTag());
+
     releaseContextData();
     unbindFromContext();
   }

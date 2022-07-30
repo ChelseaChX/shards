@@ -4,6 +4,7 @@
 #include "context_data.hpp"
 #include "gfx_wgpu.hpp"
 #include "linalg.hpp"
+#include <spdlog/fmt/fmt.h>
 
 namespace gfx {
 
@@ -16,7 +17,9 @@ private:
   std::string label{};
 
 public:
-  ViewTexture(WGPUTextureFormat format, const char *label = "unknown ViewTexture") : format(format), label(label) {}
+  ViewTexture(WGPUTextureFormat format, const char *label = "unknown ViewTexture") : format(format), label(label) {
+    setDebugTag(fmt::format("viewTexture {}", label));
+  }
   ~ViewTexture() { releaseContextDataConditional(); }
 
   ViewTexture(const ViewTexture &other) = delete;
@@ -44,7 +47,7 @@ public:
       textureDesc.size.height = size.y;
       textureDesc.label = label.c_str();
       texture = wgpuDeviceCreateTexture(context.wgpuDevice, &textureDesc);
-        assert(texture);
+      assert(texture);
 
       WGPUTextureViewDescriptor viewDesc{};
       viewDesc.arrayLayerCount = 1;
@@ -55,7 +58,7 @@ public:
       viewDesc.aspect = WGPUTextureAspect_All;
       viewDesc.format = format;
       textureView = wgpuTextureCreateView(texture, &viewDesc);
-        assert(textureView);
+      assert(textureView);
 
       bindToContext(context);
     }

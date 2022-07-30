@@ -306,6 +306,7 @@ void Context::collectContextData() {
 void Context::releaseAllContextData() {
   ZoneScoped;
   auto contextDatas = std::move(this->contextDatas);
+  SPDLOG_INFO("Clearing {} context data entries", contextDatas.size());
   for (auto &obj : contextDatas) {
     if (!obj.second.expired()) {
       obj.first->releaseContextDataConditional();

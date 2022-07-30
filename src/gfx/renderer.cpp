@@ -268,6 +268,9 @@ struct RendererImpl final : public ContextData {
     for (size_t i = 0; i < maxBufferedFrames; i++) {
       swapBuffers();
     }
+
+    SPDLOG_INFO("Clearing {} pipeline cache entries", pipelineCache.size());
+    SPDLOG_INFO("Clearing {} view cache entries", viewCache.size());
     pipelineCache.clear();
     viewCache.clear();
   }

@@ -7,7 +7,10 @@
 #include <gfx/context.hpp>
 
 namespace gfx {
-ImGuiRenderer::ImGuiRenderer(Context &context) : context(context) { init(); }
+ImGuiRenderer::ImGuiRenderer(Context &context) : context(context) {
+  setDebugTag("ImGuiRenderer");
+  init();
+}
 
 ImGuiRenderer::~ImGuiRenderer() { cleanup(); }
 

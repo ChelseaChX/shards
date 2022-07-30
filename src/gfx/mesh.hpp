@@ -60,6 +60,7 @@ struct MeshContextData : public ContextData {
   WGPUBuffer indexBuffer = nullptr;
   size_t indexBufferLength = 0;
 
+  MeshContextData() { setDebugTag("mesh"); }
   ~MeshContextData() { releaseContextDataConditional(); }
   void releaseContextData() override {
     WGPU_SAFE_RELEASE(wgpuBufferRelease, vertexBuffer);
