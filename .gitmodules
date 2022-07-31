@@ -84,17 +84,17 @@
 	url = https://github.com/ocornut/imgui.git
 [submodule "cmake/android-cmake"]
 	path = cmake/android-cmake
-	url = git@github.com:guusw/android-cmake.git
+	url = https://github.com/guusw/android-cmake.git
 [submodule "src/gfx/wgpu"]
 	path = src/gfx/wgpu
-	url = git@github.com:chainblocks/wgpu.git
+	url = https://github.com/chainblocks/wgpu.git
 	branch = master
 [submodule "src/gfx/naga"]
 	path = src/gfx/naga
 	url = https://github.com/chainblocks/naga
 [submodule "deps/tracy"]
 	path = deps/tracy
-	url = git@github.com:wolfpld/tracy.git
+	url = https://github.com/wolfpld/tracy.git
 [submodule "src/profiling/rust_tracy_client"]
 	path = src/profiling/rust_tracy_client
-	url = git@github.com:nagisa/rust_tracy_client.git
+	url = https://github.com/chainblocks/rust_tracy_client.git
