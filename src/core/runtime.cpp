@@ -209,11 +209,11 @@ static void setupSpdLog() {
   logger->sinks().push_back(android_sink);
 #endif
 
-#ifdef __ANDROID
-  // Logcat already countains timestamps & log level
-  spdlog::set_pattern("[T-%t] [%s::%#] %v");
+#ifdef __ANDROID__
+  // Logcat already countains timestamps, thread ID & log level
+  spdlog::set_pattern("[%@] %v");
 #else
-  spdlog::set_pattern("%^[%l]%$ [%Y-%m-%d %T.%e] [T-%t] [%s::%#] %v");
+  spdlog::set_pattern("%^[%l]%$ [%Y-%m-%d %T.%e] [T-%t] [%@] %v");
 #endif
 
 #ifdef NDEBUG
