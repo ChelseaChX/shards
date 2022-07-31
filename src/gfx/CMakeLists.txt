@@ -113,6 +113,7 @@ if(NOT EMSCRIPTEN)
 
   if(TRACY_ENABLE)
     list(APPEND WGPU_FEATURES "profile")
+    set(TRACY_ENV TRACY_CLIENT_LIB=$<TARGET_FILE_BASE_NAME:Tracy::TracyClient> TRACY_CLIENT_LIB_DIR=$<TARGET_FILE_DIR:Tracy::TracyClient>)
   endif()
 
   add_rust_library(
@@ -120,6 +121,7 @@ if(NOT EMSCRIPTEN)
     PROJECT_PATH ${WGPU_NATIVE_PATH}
     DEPENDS ${EXTRA_SOURCES}
     FEATURES ${WGPU_FEATURES}
+    ENVIRONMENT ${TRACY_ENV}
   )
 
   target_include_directories(wgpu-native-rust INTERFACE ${WGPU_NATIVE_PATH}/ffi)
