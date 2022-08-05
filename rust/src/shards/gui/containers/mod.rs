@@ -30,6 +30,7 @@ struct Window {
   title: ParamVar,
   contents: ShardsVar,
   parents: ParamVar,
+  exposing: ExposedTypes,
 }
 
 macro_rules! decl_panel {
