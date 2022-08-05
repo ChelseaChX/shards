@@ -5,6 +5,7 @@ use crate::core::cloneVar;
 use crate::core::destroyVar;
 use crate::core::Core;
 use crate::shardsc::SHBool;
+use crate::shardsc::SHColor;
 use crate::shardsc::SHComposeResult;
 use crate::shardsc::SHContext;
 use crate::shardsc::SHExposedTypeInfo;
@@ -540,6 +541,7 @@ pub mod common_type {
   use crate::shardsc::SHType_Any;
   use crate::shardsc::SHType_Bool;
   use crate::shardsc::SHType_Bytes;
+  use crate::shardsc::SHType_Color;
   use crate::shardsc::SHType_ContextVar;
   use crate::shardsc::SHType_Enum;
   use crate::shardsc::SHType_Float;
@@ -785,6 +787,16 @@ pub mod common_type {
     float4s_var,
     float4_table,
     float4_table_var
+  );
+  shtype!(
+    make_color,
+    SHType_Color,
+    color,
+    colors,
+    color_var,
+    colors_var,
+    color_table,
+    color_table_var
   );
   shtype!(
     make_bool,
@@ -2613,6 +2625,19 @@ impl TryFrom<&Var> for (half::f16, half::f16, half::f16, half::f16) {
   }
 }
 
+impl TryFrom<&Var> for SHColor {
+  type Error = &'static str;
+
+  #[inline(always)]
+  fn try_from(var: &Var) -> Result<Self, Self::Error> {
+    if var.valueType != SHType_Color {
+      Err("Expected Color variable, but casting failed.")
+    } else {
+      unsafe { Ok(var.payload.__bindgen_anon_1.colorValue) }
+    }
+  }
+}
+
 impl TryFrom<&Var> for bool {
   type Error = &'static str;
 
@@ -3520,6 +3545,7 @@ pub static INT2_TYPES_SLICE: &[Type] = &[common_type::int2];
 pub static FLOAT_TYPES_SLICE: &[Type] = &[common_type::float];
 pub static FLOAT2_TYPES_SLICE: &[Type] = &[common_type::float2];
 pub static FLOAT3_TYPES_SLICE: &[Type] = &[common_type::float3];
+pub static COLOR_TYPES_SLICE: &[Type] = &[common_type::color];
 pub static BOOL_TYPES_SLICE: &[Type] = &[common_type::bool];
 pub static STRING_TYPES_SLICE: &[Type] = &[common_type::string];
 pub static STRING_OR_NONE_SLICE: &[Type] = &[common_type::string, common_type::none];
