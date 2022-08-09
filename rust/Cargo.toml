@@ -84,6 +84,7 @@ shards = ["reqwest",
           "chrono",
           "egui",
           "egui-gfx"]
+code_editor = []
 dllshard = ["dlopen"]
 scripting = []
 
