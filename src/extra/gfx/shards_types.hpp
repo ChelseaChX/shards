@@ -97,6 +97,7 @@ struct Container {
   OBJECT('draw', "GFX.Drawable", Drawable, SHDrawable)
   OBJECT('mesh', "GFX.Mesh", Mesh, MeshPtr)
   OBJECT('dque', "GFX.DrawQueue", DrawQueue, SHDrawQueue)
+  OBJECT('tex_', "GFX.Texture", Texture, TexturePtr)
 
   ENUM('_e0', "WindingOrder", WindingOrder, gfx::WindingOrder)
   ENUM('_e1', "ShaderFieldBaseType", ShaderFieldBaseType, gfx::ShaderFieldBaseType)
