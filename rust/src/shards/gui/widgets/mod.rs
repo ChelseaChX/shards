@@ -91,6 +91,18 @@ struct ListBox {
   tmp: usize,
 }
 
+struct Plot {
+  parents: ParamVar,
+  requiring: ExposedTypes,
+  contents: ShardsVar,
+  exposing: ExposedTypes,
+  lines: ParamVar,
+}
+
+struct PlotLine {
+  lines: ParamVar,
+}
+
 struct ProgressBar {
   parents: ParamVar,
   requiring: ExposedTypes,
@@ -181,6 +193,7 @@ mod label;
 mod listbox;
 mod numeric_input;
 mod numeric_slider;
+mod plot;
 mod progress_bar;
 mod radio_button;
 mod spinner;
@@ -212,6 +225,8 @@ pub fn registerShards() {
   registerShard::<Int2Slider>();
   registerShard::<Int3Slider>();
   registerShard::<Int4Slider>();
+  registerShard::<Plot>();
+  registerShard::<PlotLine>();
   registerShard::<ProgressBar>();
   registerShard::<RadioButton>();
   registerShard::<Spinner>();
