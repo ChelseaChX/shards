@@ -2024,10 +2024,6 @@ impl Var {
     self.valueType == SHType_Path
   }
 
-  pub fn as_ref(&self) -> &Self {
-    self
-  }
-
   pub fn is_context_var(&self) -> bool {
     self.valueType == SHType_ContextVar
   }
@@ -3363,7 +3359,7 @@ impl Default for Seq {
 impl AsRef<Seq> for Seq {
   #[inline(always)]
   fn as_ref(&self) -> &Seq {
-    &self
+    self
   }
 }
 
